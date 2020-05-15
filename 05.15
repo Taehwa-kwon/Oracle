@@ -1,0 +1,183 @@
+     WITH ABC( EMP_ID ,FIRST_NAME , START_DATE, END_DATE,DEPARTMENT_ID)
+   AS 
+    (
+     SELECT E.EMPLOYEE_ID, E.FIRST_NAME, E.HIRE_DATE, NULL, E.DEPARTMENT_ID
+   FROM EMPLOYEES E
+   UNION
+   SELECT JH.EMPLOYEE_ID, E.FIRST_NAME, JH.START_DATE, JH.END_DATE, JH.DEPARTMENT_ID
+   FROM JOB_HISTORY JH, EMPLOYEES E
+   WHERE E.EMPLOYEE_ID = JH.EMPLOYEE_ID
+     )
+     SELECT EMP_ID ,FIRST_NAME , START_DATE, 
+     CASE
+        WHEN END_DATE IS NULL THEN '재직중'
+        ELSE    TO_CHAR(END_DATE)
+       END "현재근무/사퇴날짜"  ,
+       D.DEPARTMENT_NAME
+       
+     FROM ABC A , DEPARTMENTS D
+     WHERE A.DEPARTMENT_ID = D.DEPARTMENT_ID
+     ORDER BY A.EMP_ID, START_DATE;
+     
+     
+     DDL (DATA DEFINITION LANGUAGE 데이터 정의어)
+데이터구조나 객체들 생성, 수정, 삭제
+
+CREATE : 구조(SCHEMA) 생성
+ALTER  : 스키마 변경
+DROP   : 스키마 제거
+
+가상 컬럼 테이블 생성하기 
+
+데이터 타입
+C1 CHAR(6) <- 'A'
+무조건 6BYTE확보
+
+LENGTH(C1) -> 
+ABBBBB : B공백
+'A      '
+
+C2 VARCHAR2(6) <-'6'
+'A'
+LENGTH(C2) -> 1
+
+
+--조회
+SELECT * FROM EMP;
+--테이블 삭제
+DROP TABLE EMP;
+--테이블 컬럼 삭제
+DELETE FROM EMP WHERE EMPLOYEE_ID = 101;
+--테이블 데이터 삽입
+
+
+--테이블을 만드는 방법 
+
+1.기존테이블을 복사한다
+    (1) 구조 + 데이터 함께 복사한다  //제약조건은 포함하지 않음
+    CREATE TABLE EMP
+    AS
+    SELECT * FROM EMPLOYEES;
+    (2) 일부컬럼만 복사하여 만듬
+    CREATE TABLE EMP
+    AS
+    SELECT EMPLOYEE_ID,FIRST_NAME
+    FROM EMPLOYEES
+    WHERE DEPARTMENT_ID BETWEEN 60 AND 120;
+    (3) 구조만 복사 ( 데이터제외) 
+    CREATE TABLE EMP
+    AS 
+    SELECT *
+    FROM EMPLOYEES
+    WHERE 1=2;
+
+2.새로만든다
+
+회원 : MEMBER  
+번호 MEMID  숫자(7) 필수입력  기본키 
+이름 MEMNAME 문자(30) 필수입력
+이메일 EMAIL  문자(30) 필수입력
+전화 TEL 문자 (10) 
+포인트 POINT 숫자 (7) 기본값 1000
+가입일 REGDATE  날짜  기본값 오늘
+  
+  DROP TABLE MEMBER;
+  
+   CREATE TABLE MEMBER (
+   MEMID NUMBER(7) NOT NULL PRIMARY KEY,
+   MEMNAME VARCHAR(30) NOT NULL,
+   EMAIL VARCHAR(30) UNIQUE,
+   TEL VARCHAR(30) ,
+   POINT NUMBER(7) DEFAULT 1000,
+   REGDATE DATE DEFAULT SYSDATE
+   );
+       
+   SELECT*FROM MEMBER;
+   
+   INSERT INTO MEMBER( MEMID,MEMNAME,EMAIL,TEL,POINT,REGDATE)
+   VALUES(1, '지은' , 'JH@NAVER.COM' , NULL, 1000, SYSDATE );
+   
+   INSERT INTO MEMBER( MEMID,MEMNAME,EMAIL,TEL,POINT,REGDATE)
+   VALUES(2, '태화' , 'TH@NAVER.COM' , '010-1111-1234', 1000, SYSDATE );
+   
+   INSERT INTO MEMBER( MEMID,MEMNAME,EMAIL,TEL)
+   VALUES(3, '가나' , 'KN@NAVER.COM' , '010-2222-2345');
+   
+   INSERT INTO MEMBER( MEMID,MEMNAME,EMAIL,TEL)
+   VALUES(4, '은영' , 'EN@NAVER.COM' , '010-2222-2345');
+
+ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS';
+   
+UPDATE MEMBER SET REGDATE = TO_DATE('2020/05/15') WHERE MEMID='1' ;
+UPDATE MEMBER SET REGDATE = TO_DATE('2020/05/15') WHERE MEMID='2' ;
+UPDATE MEMBER SET REGDATE = TO_DATE('2020/05/15') WHERE MEMID='3' ;
+UPDATE MEMBER SET REGDATE = TO_DATE('2020/05/15') WHERE MEMID='4' ;
+      
+COMMIT;
+   
+   --게시판
+글번호     숫자(7)   필수입력    기본키
+글제목     문자(120) 필수입력    
+내용      문자(4000)
+글쓴이     문자(7)   MEMBER의 MEMID를 참조한다(참조)
+조회수     숫자(7)   기본값 0
+글쓴날     날짜      기본값 오늘
+좋아요     숫자(7)   범위 0 이상
+
+CREATE TABLE BOARD
+(
+    BRDID   NUMBER(7)  NOT NULL
+    , TITLE VARCHAR2(120) NOT NULL
+    , CONTENT VARCHAR2(4000)
+    , MEMID NUMBER(7)
+    --혹은 , MEMID NUMBER(7)  REFERENCES MEMBER(MEMID) --외래키 
+    --혹은 , MEMID NUMBER(7)  REFERENCES MEMBER(MEMID) --외래키 
+    , HIT NUMBER(7) DEFAULT 0
+    ,WDATE DATE DEFAULT SYSDATE
+    ,GOOD NUMBER(7) CHECK (GOOD>=0)
+    --중요한게 PRIMIRY KEY 이렇게 해도 되는데 만약 기본키를 2개이상 지정할 경우(복합키) 문법적으로 오류가 발생하니
+    --아래에서 이렇게 제약조건을 넣어줘야한다.
+    ,CONSTRAINT PK_BRDID PRIMARY KEY (BRDID,MEMID)
+    ,CONSTRAINT FK_MEMID FOREIGN KEY (MEMID) 
+    REFERENCES MEMBER(MEMID) --외래키 
+   );
+   
+   DELETE FROM MEMBER;
+   --BOARD 테이블에 REFERENCES MEMBER(MEMID) 의 뜻은 부모의 MEMBER테이블의 MEMID를 참조한다.
+   -- 부모의 키가 없어서 아래의 게시글 추가가 될수 없다.
+   COMMIT;
+   SELECT * FROM MEMBER;
+   SELECT * FROM BOARD;
+   
+   --게시글 추가
+   INSERT INTO BOARD ( BRDID,TITLE,CONTENT,MEMID,HIT,WDATE,GOOD)
+   VALUES (1, '새로운 글' ,'내용없음',1,0,SYSDATE,0);
+   
+    INSERT INTO BOARD ( BRDID,TITLE,CONTENT,MEMID,GOOD)
+   VALUES (2, '새로운 글2' ,'내용없음',1,0);
+   
+   --'지은'이가 쓴 글의 목록 출력
+   
+   SELECT *
+   FROM BOARD B, MEMBER M
+   WHERE M.MEMID = B.MEMID
+   ;
+   COMMIT;
+   
+   --'지은'이 탈퇴 : 
+   DELETE FROM MEMBER
+   WHERE MEMID=1;
+   --ORA-02292: integrity constraint (HR.FK_MEMID) violated - child record found
+   --외래키의 능력 || 자식레코드에 '지은'이 있으므로 삭제 불가능
+   --먼저 자식레코드에서 쓴 글을 지우고 '지은'멤버를 삭제가능
+   
+   --그래서 한번에 다 지울수 있는 방법이 ON DELETE CASCADE..(굉장히 위험한 ..)
+   
+   
+   DROP TABLE BOARD;
+   
+   
+3.IMPORT한다 
+
+
+
