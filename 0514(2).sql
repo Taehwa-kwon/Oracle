@@ -206,9 +206,13 @@ DESC LOCATIONS;
 
 ----------------------------------------------------------------
 GROUP BY 추가예제
-ROLLUP()
+
+RoLLUP과 CUBE의 차이점.  http://egloos.zum.com/huzii/v/3638265
+        
+
 
 CUBE()
+ROLLUP()
 
 --부서별 월급합 : GROUP BY 
 --기준에 따라서 집계되는것이 다르다.
