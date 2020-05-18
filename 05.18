@@ -403,10 +403,13 @@ WHERE (DONG LIKE '%롯데%'
 OR BUNJI LIKE '%롯데%'
 OR SEQ LIKE '%롯데%');
 
-
 SELECT *
 FROM POST
 WHERE DONG LIKE '%롯데%';
+
+SELECT * 
+FROM POST
+WHERE (DONG , BUNJI , SEQ) IN '%롯데%';
 
 E-R다이어그램 확인하는 방법! 전체의 구조를 다이어그램으로 확인가능
 1.FILE -> DATA MODELER ->임포트->데이터딕셔너리 
@@ -417,3 +420,140 @@ SELECT * FROM POST;
 ROLLBACK;
 
   --------------------------오후
+   SUBQUERY
+   SELECT COUNT(*) FROM EMPLOYEES
+   WHERE SALARY < (
+    SELECT AVG(SALARY) FROM EMPLOYEES);
+    
+    SELECT count(*) FROM EMPLOYEES
+   WHERE SALARY < (
+    SELECT MEDIAN(SALARY) FROM EMPLOYEES);
+    
+    'DONALD'와 SALARY가 동일한 직원정보 출력
+    SELECT EMPLOYEE_ID, FIRST_NAME, SALARY
+    FROM EMPLOYEES
+    WHERE LOWER(FIRST_NAME) = 'donald'; 
+  
+  SELECT E.EMPLOYEE_ID, E.FIRST_NAME, D.DEPARTMENT_NAME
+  FROM EMPLOYEES E, DEPARTMENTS D
+  WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID;
+  
+  -부서번호가 90인 사원의 이름을 출력하시오
+  SELECT *
+  FROM EMPLOYEES
+  WHERE DEPARTMENT_ID =90;
+  
+  -'ki'가 근무하는 부서직원들의 이름을 출력
+  SELECT * 
+  FROM employees
+  WHERE department_id in 
+  ( select department_id
+  from employees
+  where first_name='Ki');
+  
+  SELECT FIRST_NAME, DEPARTMENT_ID
+  FROM employees
+  WHERE department_id in 
+  ( select department_id
+  from employees
+  where LOWER(first_name)='ki');
+  
+
+  
+  -'ki'가 근무하는 부서직원들의 월급 평균 소수이하 2자리로
+  SELECT ROUND(AVG(SALARY),2),TO_CHAR(NVL(AVG(SALARY),0),'L99,999.99')
+  FROM EMPLOYEES
+  WHERE DEPARTMENT_ID IN
+  (SELECT DEPARTMENT_ID
+  FROM EMPLOYEES
+  where LOWER(first_name)='ki');
+  
+  ---department_id를 어떻게 찍을수 있을까???
+  SELECT DEPARTMENT_ID,ROUND(AVG(SALARY),2),TO_CHAR(NVL(AVG(SALARY),0),'L99,999.99')
+  FROM EMPLOYEES
+  WHERE DEPARTMENT_ID IN
+  (SELECT DEPARTMENT_ID
+  FROM EMPLOYEES
+  where LOWER(first_name)='ki');
+  
+  -근무지역이 'seattle'인 부서에 근무하는 직원이름
+   
+   1)근무지역이 'Seattle'인 지역번호
+   SELECT LOCATION_ID
+   FROM LOCATIONS
+   WHERE CITY = 'Seattle';
+   2)이 지역번호에 해당하는 부서번호
+   SELECT DEPARTMENT_ID
+   FROM DEPARTMENTS
+   WHERE LOCATION_ID = 1700;
+   3)
+
+
+   
+   
+   
+   
+  SELECT FIRST_NAME
+  FROM EMPLOYEES
+  WHERE DEPARTMENT_ID IN
+    (SELECT DEPARTMENT_ID
+    FROM DEPARTMENTS
+    WHERE LOCATION_ID IN
+    (SELECT LOCATION_ID
+    FROM LOCATIONS
+    WHERE CITY = 'Seattle'));
+  
+  --상관 SUBQUERY
+  -직원들 중에 자신의 업무의 평균월급과 같거나 많은 사람의 이름과 업무,월급(!!!!!!!!!)
+    SELECT FIRST_NAME, DEPARTMENT_ID, SALARY
+  FROM EMPLOYEES
+  WHERE SALARY >= (
+  SELECT AVG(SALARY) FROM EMPLOYEES );
+  
+  자신의 부서의 평균월급과 같거나 많은 사람들의 이름과 업무,월급
+  SELECT E1.FIRST_NAME, E1.JOB_ID, E1.SALARY
+    FROM EMPLOYEES E1
+      WHERE E1.SALARY >= (
+       SELECT AVG(E2.SALARY)
+        FROM EMPLOYEES E2
+          WHERE E1.JOB_ID = E2.JOB_ID );
+  ---혹은 SELF JOIN으로 구할수 있다.
+  
+  
+  -부서별 최고월급을 가진 직원이름 (!!!!!!!존나 중요 ~ 별로 이면 GROUP BY)이다 ) 
+  SELECT FIRST_NAME,DEPARTMENT_ID,SALARY
+  FROM EMPLOYEES
+  WHERE  DEPARTMENT_ID IN (
+  (SELECT MAX(SALARY) FROM EMPLOYEES ),
+  (SELECT MIN(SALARY) FROM EMPLOYEES)
+  );
+  
+    --먼저 부서별 최고월급을 구한다.
+    --multi column subquery
+  SELECT DEPARTMENT_ID, MAX (SALARY)
+  FROM EMPLOYEES
+  GROUP BY DEPARTMENT_ID;
+  
+  
+   SELECT FIRST_NAME,DEPARTMENT_ID,SALARY
+   FROM EMPLOYEES
+   WHERE (  DEPARTMENT_ID,SALARY  )     --2개
+   IN ( 
+      SELECT DEPARTMENT_ID, MAX(SALARY)   --2개 맞춰야 하는것 같음.. 
+       FROM EMPLOYEES 
+        GROUP BY DEPARTMENT_ID  );
+  
+  
+  --직원명, 부서이름
+  --SCALAR SUBQUERY, SELECT 절에 오른 서브쿼리 : outer join 대체 가능
+  
+   SELECT E.FIRST_NAME 직원이름,
+    (
+        SELECT DEPARTMENT_NAME
+        FROM DEPARTMENTS
+        WHERE DEPARTMENT_ID = E.DEPARTMENT_ID
+        ) 부서이름
+    FROM EMPLOYEES E;
+
+  
+  
