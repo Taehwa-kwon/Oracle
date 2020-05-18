@@ -377,14 +377,43 @@ ALTER : 스키마 구조 변경
   3) DROP TABLE MEMBER3
   테이블 자체를 제거 
    
-   
-   
-   
-   
-   
-   
-   
 3.IMPORT한다 
+ DROP table POST;
+ SELECT COUNT(*) FROM POST;
+ 
+ SELECT * FROM POST;
+
+SELECT DISTINCT(SIDO) FROM POST;
+
+ SIDO별 우편번호 개수
+ SELECT SIDO, COUNT(ZIPCODE) 
+ FROM POST
+ GROUP BY ROLLUP(SIDO);
+ 
+
+SELECT SIDO, GUGUN,COUNT(DONG)
+FROM POST
+GROUP BY ROLLUP(SIDO,GUGUN)
+ORDER BY 1, 3 DESC;
+
+ --롯데백화점 (한번에 검색할 수 없을까?
+SELECT *
+FROM POST
+WHERE (DONG LIKE '%롯데%'
+OR BUNJI LIKE '%롯데%'
+OR SEQ LIKE '%롯데%');
 
 
+SELECT *
+FROM POST
+WHERE DONG LIKE '%롯데%';
 
+E-R다이어그램 확인하는 방법! 전체의 구조를 다이어그램으로 확인가능
+1.FILE -> DATA MODELER ->임포트->데이터딕셔너리 
+직접 만드는 방법
+1.보기 -> DATA MODELER -> 브라우저 -> 관계형모델에서 
+
+SELECT * FROM POST;
+ROLLBACK;
+
+  --------------------------오후
