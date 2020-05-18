@@ -555,5 +555,76 @@ ROLLBACK;
         ) 부서이름
     FROM EMPLOYEES E;
 
+ 
+    ------------------------------------------------------------------------------------------------
+    INDEX : 검색속도를 빠르게 하기 위해 찾아보기INDEX를 만들어서 사용
+    -데이터 조작시 찾아보기를 통해 조작(SELECT, INSERT, DELETE, UPDATE()
+     
+    파일처리 : 전체 자료를 찾는 경우에는 파일처리가 훨씬 빠르다. 이유는 oracle 은 자료를 아무대나 저장하기 때문에 오히려 더 걸릴수가 있다.
+    
+    
+    --시간측정 타이머 ON 같이 드래그해야함.
+    SET TIMING ON
+    SELECT * FROM EMPLOYEES;  
+    --인덱스 생성
+    CREATE INDEX IDEEMP
+    ON EMPLOYEES(FIRST_NAME);
+    
+    SET TIMING ON
+    SELECT * FROM EMPLOYEES;
+    
+    -----================PL/SQL문법 - ORACLE 프로그램 가능 문법================----------
+    --T-SQL - MSSQL 프로그램 가능 문법
+    
+    CREATE TABLE T (C1 NUMBER);
+    begin
+     FOR I IN 1 .. 1000000 LOOP
+     INSERT INTO T VALUES (I);
+    
+        END LOOP;
+    end;
+    /
+    SET TIMING ON
+    
+    SET TIMING ON
+    select count(*) from T;
+    
+    CREATE INDEX IDXT
+    ON T(C1)
   
-  
+  SET TIMING ON
+    select count(*) from T;
+    
+    인덱스 생성
+    CREATE [UNIQUE] INDEX[스키마명.] 인덱스명
+    ON [스키마명.]테이블명(컬럼1,컬럼2,...);
+    
+    인덱스 삭제
+    CREATE INDEX ex2_10_ix02;
+    
+    한 개 이상의 컬럼으로 인덱스를 만들 수 있는데, 이를 결합 인덱스라고 한다.
+    CREATE INDEX EX2_10_IX02
+    ON EX2_10 (COL1,COL2);
+    
+    인덱스는 검색 속도를 빠르게 하는 목적으로 생성한다.
+    INSERT, DELETE, UPDATE가 많은 경우는 INDEX는 오히려 속도를 느리게한다.
+    
+    테이블 전체 ROW 수의 15%이하의 데이터를 조회할 때 인덱스를 생성
+    NULL이 많은 칼럼은 인덱스를 만들지 않는 것이 좋다
+    WHERE 이 사용되는 칼럼에 인덱스를 부여한다.
+    
+    INDEX가 작동하지 않는 조건문
+    LIKE '%김%' : 이 상황에서는 효과가 없다.
+    LIKE '%김'  : 이런 상황은 괜찮다.
+    LIKE '김%'  : 이런 상황은 괜찮다.
+    LOWER(FIRST_NAME) : 이럴때도 작동하지 않는다. -> INDEX 가 걸려있는 칼럼을 가공(함수,계산식으로 처리)하면 작동안함. 
+    
+    SALARY에 INDEX가 있을때
+    WHERE SALARY * 12 = 100000 //인덱스가 작동안한다.
+    WHERE SALARY = 100000/12 //인덱스가 작동 함
+    
+    KEY 항목은 자동으로 인덱스가 만들어진다.
+    PK,FK 
+    
+    
+    https://viewa.tistory.com/44
