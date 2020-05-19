@@ -163,6 +163,7 @@ INLINE VIEW는 항상 ALIANS를 부여하는게 좋고 즉 FROM에다가 단독�
     END;
     /
     
+    1.먼저 DECLARE에서 어떤 변수를 쓸지 선언하고 2.BEGIN안의 FROM이 실행 3.WHERE절 실행 4.SELECT 실행됨
     DECLARE
      VEMPID NUMBER(6);
      VENAME VARCHAR2(20);
@@ -187,7 +188,7 @@ INLINE VIEW는 항상 ALIANS를 부여하는게 좋고 즉 FROM에다가 단독�
         SELECT EMPLOYEE_ID, FIRST_NAME || ' ' ||LAST_NAME, JOB_ID
             INTO V_SABUN, V_IRUM, V_JOB_ID
         FROM EMPLOYEES
-        WHERE EMPLOYEE_ID = V_EMPID;  --같다를 의미
+        WHERE EMPLOYEE_ID = V_EMPID;  --같다를 의미/ 즉 V_EMPID의 107을 EMPLOYEE_ID에 넣어서 찾는다.
         DBMS_OUTPUT.PUT_LINE('사번: ' || V_SABUN);
         DBMS_OUTPUT.PUT_LINE('이름: ' || V_IRUM);
         DBMS_OUTPUT.PUT_LINE('직업: ' || V_JOB_ID);
@@ -236,3 +237,343 @@ INLINE VIEW는 항상 ALIANS를 부여하는게 좋고 즉 FROM에다가 단독�
     
 
     -----오후
+    第一步
+    SELECT D.DEPARTMENT_NAME, MAX(E.SALARY), MIN(E.SALARY), AVG(E.SALARY)
+    FROM DEPARTMENTS D, EMPLOYEES E
+    WHERE D.DEPARTMENT_ID = E.DEPARTMENT_ID
+    GROUP BY D.DEPARTMENT_NAME
+    第二步
+    SELECT D.DEPARTMENT_NAME, MAX(E.SALARY), MIN(E.SALARY), AVG(E.SALARY)
+    FROM DEPARTMENTS D, EMPLOYEES E
+    WHERE D.DEPARTMENT_ID = E.DEPARTMENT_ID
+    AND D.DEPARTMENT_ID = 60
+    GROUP BY D.DEPARTMENT_NAME
+    第三步 Procedural Language/SQL 
+   
+    DECLARE
+        V_DNAME DEPARTMENTS.DEPARTMENT_NAME%TYPE; --여기는 D.으로 할 수 없다.
+        V_MAXSAL NUMBER(10);
+        V_MINSAL NUMBER(10);
+        v_AVGSAL NUMBER(10, 3);   --可以写少数点到第三个
+        V_DEPT_ID NUMBER(10);
+        MSG VARCHAR2(4000);
+    BEGIN
+        V_DEPT_ID := 60;
+        SELECT D.DEPARTMENT_NAME, MAX(E.SALARY), MIN(E.SALARY), AVG(E.SALARY)
+        INTO V_DNAME, V_MAXSAL, V_MINSAL, V_AVGSAL
+    FROM DEPARTMENTS D, EMPLOYEES E
+    WHERE D.DEPARTMENT_ID = E.DEPARTMENT_ID
+    AND D.DEPARTMENT_ID = V_DEPT_ID
+    GROUP BY D.DEPARTMENT_NAME;
+    MSG := '부서명     최대월급    최소월급    평균월급';
+        DBMS_OUTPUT.PUT_LINE(MSG);
+    MSG :=    V_DNAME||'     ' ||V_MAXSAL ||'     ' ||V_MINSAL ||'     ' ||TO_CHAR(V_AVGSAL,'L999,999.999');
+        DBMS_OUTPUT.PUT_LINE(MSG);
+   END;
+   /
+   
+    DECLARE
+        V_DNAME DEPARTMENTS.DEPARTMENT_NAME%TYPE; --여기는 D.으로 할 수 없다.
+        V_MAXSAL NUMBER(10);
+        V_MINSAL NUMBER(10);
+        v_AVGSAL NUMBER(10, 3);   --可以写少数点到第三个
+        V_DEPT_ID NUMBER(10);
+        MSG VARCHAR2(4000);
+    BEGIN
+        V_DEPT_ID := 60;
+        SELECT  MAX(E.SALARY), MIN(E.SALARY), AVG(E.SALARY)
+        INTO V_MAXSAL, V_MINSAL, V_AVGSAL
+    FROM  EMPLOYEES E
+    WHERE E.DEPARTMENT_ID = V_DEPT_ID;
+    
+    SELECT D.DEPARTMENT_NAME
+    INTO V_DNAME
+    FROM DEPARTMENTS D
+    WHERE D.DEPARTMENT_ID= V_DEPT_ID;
+    
+   
+    MSG := '부서명     최대월급    최소월급    평균월급';
+        DBMS_OUTPUT.PUT_LINE(MSG);
+    MSG :=    V_DNAME||'     ' ||V_MAXSAL ||'     ' ||V_MINSAL ||'     ' ||TO_CHAR(V_AVGSAL,'L999,999.999');
+        DBMS_OUTPUT.PUT_LINE(MSG);
+   END;
+   /
+   
+   --문제 3. 이름(FIRST_NAME)으로 전화번호를 출력
+   DECLARE
+    V_EMP_NAME VARCHAR2(30);
+    V_EMP_PHONE VARCHAR2(30);
+    --혹은 EMPLOYEES.FIRST_NAME/PHONE_NUMBER%TYPE;
+   BEGIN
+   DBMS_OUTPUT.PUT_LINE('나 제목이야 ');
+    SELECT FIRST_NAME, PHONE_NUMBER
+     INTO V_EMP_NAME, V_EMP_PHONE
+    FROM EMPLOYEES
+    WHERE FIRST_NAME = 'Neena'; 
+    --WHERE FIRST_NAME = 'Steven'; 의 경우 
+    DBMS_OUTPUT.PUT_LINE('이름: ' || V_EMP_NAME);
+    DBMS_OUTPUT.PUT_LINE('전화번호: ' || V_EMP_PHONE);
+   END;
+   /
+   
+   --문제 3-1 EMPLOYYES테이블에 이름이 같은사람 (??? 할수 있을꺼 같은데..)
+   
+   SELECT E1.FIRST_NAME
+   FROM EMPLOYEES E1
+    FULL OUTER JOIN EMPLOYEES E2 
+    ON E1.EMPLOYEE_ID = E2.EMPLOYEE_ID
+   WHERE E1.FIRST_NAME IS NULL;
+   --E2.FIRST_NAME;
+   --OR E1.LAST_NAME != E2.LAST_NAME;
+   이거 말고도 ..다른방법
+
+   
+   
+   SELECT FIRST_NAME, COUNT(FIRST_NAME)
+    FROM EMPLOYEES
+    GROUP BY FIRST_NAME
+    HAVING COUNT(FIRST_NAME)>= 2; 
+    
+   John, Peter 같은 동명이인처리 안됌
+   오류보고 
+   ORA -01422:exact fetch returns more than requested number of rows
+   select insert의 한번에 한 값만 처리가능
+   -> 해결책은 cursor을 사용하여 처리한다.
+   
+   --문제 4. 사번을 입력받아 사번,이름, 총수령액을 출력
+   
+   SELECT EMPLOYEE_ID, FIRST_NAME,
+   SALARY *12 + SALARY * (1-COMMISSION_PCT)
+   INTO
+   FROM EMPLOYEES
+    
+    
+    
+    SET SERVEROUTPUT ON; --스크립트 창에 화면 출력하는것
+    DECLARE 
+        V_EMP EMPLOYEES%ROWTYPE; --빈 공간인 변수에 한 줄의 타입을 부여하는 방법
+       -- TEMP NUMBER(6) :=1;
+        NETSAL NUMBER(7);
+    BEGIN
+        SELECT *            --한 줄을 V_EMP안에 넣고 
+            INTO V_EMP
+        FROM EMPLOYEES
+        WHERE FIRST_NAME = 'Nancy'     --LIKE 아니니깐 NANCY한 줄 ROW
+        
+        IF(V_EMP.COMMISSION_PCT IS NULL) THEN
+        V_EMP.COMMISSION_PCT := 0;
+        
+        NETSAL := V_EMP.SALARY *12 + V_EMP.SALARY*(1 - V_EMP.COMMISSION_PCT);
+        DBMS_OUTPUT.PUT_LINE(NETSAL);
+    END;
+    /
+    
+    -----------
+    PL/SQL 이중 FOR문 출력
+    
+    SELECT * FROM EMPLOYEES
+    WHERE DEPARTMENT_ID =: V; -- :V를 붙여서 가변변수를 만들수 있다.
+
+    
+    1) 1~N까지 짝수합 구하기
+    DECLARE 
+        V_COUNT NUMBER(3) :=1;
+        V_SUM NUMBER := 0;
+    BEGIN
+        LOOP 
+        IF MOD(V_COUNT,2) = 0 THEN
+            V_SUM := V_SUM+V_COUNT;
+        END IF;
+        V_COUNT := V_COUNT+1;
+        EXIT WHEN V_COUNT> 100;
+         DBMS_OUTPUT.PUT_LINE('BASIC LOOP-->' || V_SUM);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('BASIC LOOP-->' || V_SUM);
+    END;
+    /
+    
+    선생님꺼 추가하기 
+    SET VERIFY OFF
+    SET SERVEROUTPUT ON ;
+    DECLARE 
+        N NUMBER(5) := :V ;
+        T NUMBER(20);
+    BEGIN
+        FOR I IN 1..N LOOP
+        IF( MOD(I,2) =0 ) THEN
+        T := T + I; 
+        ELSE 
+        END IF;
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE(T);
+    END;
+    /
+    SET SERVEROUTPUT OFF
+    SET VERIFY ON
+    
+    
+    
+    
+    2)*
+      **
+      ***
+      ****
+      *****
+     DECLARE
+        I NUMBER := 0;
+        J NUMBER := 1;
+     BEGIN 
+        LOOP
+            I:= I+1;
+            LOOP
+                J = I;
+                DBMS_OUTPUT.PUT_LINE('*');
+            EXIT WHEN I =5 ;
+            END LOOP;
+        END LOOP;
+      END;
+      /
+      
+      DECLARE 
+        BEGIN
+            FOR I IN 1..5
+            LOOP
+                FOR J IN 1..I
+                    LOOP
+                    DBMS_OUTPUT.PUT('*');
+                END LOOP;
+                DBMS_OUTPUT.PUT_LINE('');
+             END LOOP;
+       END;
+       /
+    
+    3) 직원테이블에서 직원의 월급순(내림차순)으로 자료출력하라
+    앞에 번호를붙여서
+    1 Steven 24000
+    2 Neena 20000
+    
+    SELECT ROWNUM,EMPLOYEE_ID, FIRST_NAME, SALARY
+    FROM EMPLOYEES
+    ORDER BY SALARY DESC;
+     --ROWNUM의 한계이다 .왜냐하면 SORT하나만 들어가도 이렇게 망함
+     
+     
+     SELECT ROW_NUMBER() OVER( ORDER BY SALARY DESC) 번호,
+     EMPLOYEE_ID, FIRST_NAME, SALARY
+    FROM EMPLOYEES
+    ORDER BY SALARY DESC;
+     
+     
+ ----------
+ PROCEDURE 프로시저
+ EMP4생성
+ CREATE TABLE EMP4
+ AS
+ SELECT * FROM EMPLOYEES;
+      
+ SELECT * FROM EMP4;     
+ 
+ --모든 직원의 월급을 10%인상하는 프로시저 생성
+ SELECT SALARY*(0.1+1)
+ FROM EMP4
+ --PROCEDURE 결과가 0개나 여러개가 리턴가능한 부 프로그램 
+ --FUNCTION 결과가 반드시 1개가 리턴 가능한 부 프로그램 (단순목적)- 사번하나를 입력하면 부서를 리턴해주는 것 
+ CREATE OR REPLACE PROCEDURE SP_UPDATE_SAL() --함수명 ( 인자 )
+ IS
+    BEGIN
+    END;
+    /
+ 
+ JAVA 의 경우
+    PUBLIC VOID SP_UPDATE_SAL(INT EMPNO) {  --EMPNO 인자를 받아서 처리한다.
+    }
+ 
+ CREATE OR REPLACE PROCEDURE SP_UPDATE_SAL
+    --(EMPNO IN NUMBER ,V1 OUT NUMBER, V2 OUT NUMBER)
+    --함수명 ( 인자 )   EMPNO IN NUMBER 바깥에있는것을 들여오는것 이고 아래에서 처리하고 V1,V2를 밖으로 보낸다는 뜻.
+    (IN_EMPNO IN NUMBER )
+ IS
+  -- DECLARE가 들어오는 자리 
+    BEGIN
+        UPDATE EMP4
+         SET SALARY = SALARY * 1.1
+         WHERE EMPLOYEE_ID = IN_EMPNO;
+        COMMIT;
+    END;
+    /
+    
+    이렇게 적용이 가능하다. 
+    execute sp_update_sal(100);
+    
+    select employee_id, salary 
+    from emp4
+    where employee_id =100;
+    
+  ------------==함수 http://www.gurubee.net/lecture/1042 -------------====
+ CREATE OR REPLACE FUNCTION FC_UPDATE_SAL --1함수명
+    (IN_EMPNO IN NUMBER) --2함수의 인자를 받는다.
+    RETURN NUMBER  --3리턴문의 타입을 지정해준다.
+IS
+    BEGIN
+     UPDATE EMP4 SET SALARY = SALARY *1.1
+     WHERE EMPLOYEE_ID = IN_EMPNO;
+     COMMIT;
+                --5위에서 업데이트 한것을 아래에 바로 집어넣는다. 
+    SELECT SAL INTO V_SAL 
+     FROM EMP4
+     WHERE  EMPLOYEE_ID = IN_EMPNO;
+    END;
+    /
+ 
+ CREATE OR REPLACE FUNCTION FC_UPDATE_SAL
+    (IN_EMPNO IN NUMBER)
+    RETURN NUMBER
+IS
+    V_SAL EMP4.SALARY%TYPE; --6변수명을 만들어주고
+    
+    BEGIN
+     UPDATE EMP4 SET SALARY = SALARY *1.1
+     WHERE EMPLOYEE_ID = IN_EMPNO; --4IN_EMPNO를 입력받아서 그거랑 같은것을 업데이트 시켜준다.
+     COMMIT;
+                --5아래에 어떤값인지 조회해보는것.
+    SELECT SALARY INTO V_SAL  --7그것을 V_SAL에 담아서.
+     FROM EMP4
+     WHERE  EMPLOYEE_ID = IN_EMPNO; --6바껴진놈을 찾아서.
+     RETURN V_SAL; --8마지막에 반드시 리턴을 해줘야 한다. 호출한다.
+    END;
+    /
+ --함수창에 해당 함수가 생겨난다.
+      --이제 함수를 호출해보자
+     VAR SALARY NUMBER;  -- 여기서 중요한게 SALARY 이거는 아무거나 해도되네 
+     EXECUTE :SALARY := FC_UPDATE_SAL(100);
+     PRINT SALARY; 
+     
+     -- http://www.gurubee.net/lecture/1042   참고
+     -- 이 문법을 통해서 DECLERE을 하지않고도 결과값을 볼수 있다.
+     
+     
+     
+     --다시 프로시저
+     번호 입력받아서 이름,급여,이메일,부서명을 출력한다. 부서명때문에 조인을 해야함
+     CREATE OR REPLACE PROCEDURE SP_EMPINFO(
+        IN_EMPNO IN EMP4.EMPLOYEE_ID%TYPE
+        )           --1 여기 위에서 입력받는다
+    IS
+        V_ENAME EMP4.FIRST_NAME%TYPE;
+        V_SAL EMP4.SALARY%TYPE;
+        V_EMAIL EMP4.EMAIL%TYPE;
+        V_DNAME DEPARTMENTS.DEPARTMENT_NAME%TYPE;
+        BEGIN
+            SELECT E.FIRST_NAME, E.SALARY, E.EMAIL, D.DEPARTMENT_NAME   --2조인을 위해서
+            INTO V_ENAME, V_SAL,V_EMAIL, V_NAME  --3이 값들을 다시 
+            FROM EMP4 E JOIN DEPARTMENTS D --2조인을 위해서
+                ON E.DEPARTMENT_ID = D.DEPARTMENT_ID --2조인을 위해서
+            WHERE E.EMPLOYEE_ID = IN_EMPNO; --입력받은 IN_EMPNO을 
+            
+            DBMS_OUTPUT.PUT_LINE(V_ENAME);
+        END;
+        /
+        ---------여기서 먼저 체크한번 해준다. 위에 IN_EMPNO에 임의의 값을 넣어서 되는지 안되는지 확인
+        --이것도 선생님꺼 봐야함 
+      
+    
