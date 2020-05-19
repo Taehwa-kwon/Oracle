@@ -1,0 +1,238 @@
+ ---------------------------------5.18 오전
+인덱스 : where을 안해도 오라클의 엔진이 자체적으로 판단해서 인덱스를 보고 실행하게 된다.
+
+옵티마이저, 튜닝 이러한 기술이 있다.
+
+뷰:
+인덱스: 찾아보기를 만든다. =색인
+프로시저:   PL/SQL
+함수:
+시퀀스:순차적으로 증가하는 컬럼을 자동적으로 생성하게 해준다.
+트리거: 이벤트 같은느낌
+
+JVM의 heap 영역의 인스턴스에 대한 참조값을 주는 방식이 hash 방식이다.
+쉽게 예를들어, 책에 index가 바로 hash 방식이다..
+찾고자 하는 단어가 key가 될 것이고, 그 내용이 있는곳을 index가 가리켜 준다.
+index에 있는 쪽 수를 따라가보면 원하는 내용을 찾을 수 있다.
+
+ROWID는 자바의 HASHCODE 와 비슷하다. 주소의 표현방법이고 모든 데이터는 고유한 ROWID를 가지고 있어서 해당 데이터를 찾으려면 ROWID를 알아야하고 모아둔게 INDEX이다.
+ROWNUM은 일련번호의 느낌이다. 
+SELECT ROWID, ROWNUM, FIRST_NAME, LAST_NAME
+FROM EMPLOYEES
+ORDER BY ROWNUM ASC;
+이때는 정상작동 하는데 중간에 어떤 조건이 있으면 엇갈릴 우려가 있다.
+SELECT ROWID, ROWNUM, FIRST_NAME, LAST_NAME
+FROM EMPLOYEES
+WHERE DEPARTMENT_ID = 90
+ORDER BY ROWNUM ASC;
+
+VIEW 생성
+
+CREATE TABLE T1
+(
+    P1 NUMBER(6) PRIMARY KEY,
+    P2 VARCHAR2(20),
+    P3 VARCHAR2(20)
+);
+
+INSERT INTO T1  VALUES (1,'AAA','BBB');
+INSERT INTO T1  VALUES (2,'AAA','BBB');
+INSERT INTO T1  VALUES (3,'AAA','BBB');
+INSERT INTO T1  VALUES (4,'AAA','BBB');
+INSERT INTO T1  VALUES (5,'AAA','BBB');
+COMMIT;
+SELECT COUNT(*) FROM T1;
+
+CREATE VIEW V_T1
+AS
+SELECT P1, UPPER(P2) UP2, INITCAP(P3) IP3
+FROM T1
+ORDER BY P1 ASC;
+
+뷰를 생성하기 전에 자신의 권한을 확인해준다.
+SELECT * FROM SESSION_PRIVS;
+
+HR은 기본적으로 권한이 매우 많다.
+권한이 없을때 
+ORA-01031:INSUFFICIENT PRIVILEGES 오류 발생 - 불충분하다/ 권한이 
+CONN / AS SYSDBA
+GRANT CREATE VIEW TO 사용자명
+VIEW는 영구적으로 보관된다. 
+
+SELECT * FROM EMP_DETAILS_VIEW;
+
+SELECT * FROM EMP_DETAILS_VIEW
+WHERE DEPARTMENT_NAME= 'IT';
+
+
+CREATE VIEW V_DEPTNAME_EMPNAME
+AS
+SELECT D.DEPARTMENT_NAME, E.FIRST_NAME || ' ' || E.LAST_NAME EMPNAME
+FROM DEPARTMENTS D, EMPLOYEES E
+WHERE D.DEPARTMENT_ID =E.DEPARTMENT_ID;
+
+SELECT * FROM V_DEPTNAME_EMPNAME
+WHERE LOWER(department_name) LIKE 'it%';
+조인이 되는 경우 제약조건이 생겨나기 때문에 insert가 아예 되지않는다.
+근본적으로 view는 SELECT 의 대상이지 추가수정삭제의 대상이 아니니깐 건들지 않는것이 좋다.
+보안의 목적과 사용자의 편의성을 위해서 
+즉 뷰의 권한을 주면 민감성 데이터를 안보이게 할 수 있다.
+desc V_DEPTNAME_EMPNAME;
+
+
+--------------------------------
+인라인뷰 : INLINE VIEW 
+INLINE VIEW 란??  FROM 문에 ( ) 안에 SUBQUERY 형태로 저장한 쿼리
+SUBQUERY 와 차이는 ORDER BY 가능
+
+일반 SUBQUERY는 ORDER BY 가 불가능하다.
+
+SELECT D.DEPARTMENT_ID 부서번호,D.DEPARTMENT_NAME 부서명, E.SAL 최대월급
+FROM (
+    SELECT DEPARTMENT_ID, MAX(SALARY) SAL
+    FROM EMPLOYEES
+    GROUP BY DEPARTMENT_ID
+    ORDER BY DEPARTMENT_ID
+    ) E, DEPARTMENTS D
+    WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID;
+    --AND DEPARTMENT_ID IN (60,90,120);
+INLINE VIEW는 항상 ALIANS를 부여하는게 좋고 즉 FROM에다가 단독적으로 실행하게 만드는 것 
+
+    ---------------SEQUENCE 시퀀스-------------------
+   CREATE SEQUENCE SEQ_TID;
+   
+    CREATE TABLE T2
+    (
+        TID NUMBER(4) PRIMARY KEY
+        ,TNAME VARCHAR2(30)
+        ,RDATE DATE DEFAULT SYSDATE
+    );
+    INSERT INTO T2 (TID, TNAME) 
+    VALUES (SEQ_TID.NEXTVAL,'AAAA');
+    --시퀀스에서 확인해보면 MIN VALUE가 1이며 INCREMENT_BY가 1이니깐 1씩 증가
+    --자바의 NEXT는 지금것을 가져와라는 의미지.
+    INSERT INTO T2 (TID, TNAME) 
+    VALUES (SEQ_TID.NEXTVAL,'BBB');
+    
+    SELECT SEQ_TID.CURRVAL FROM DUAL;
+    SELECT SEQ_TID.NEXTVAL FROM DUAL;
+    SELECT * FROM T2;
+    
+    --시퀀스의 현재값을 초기화(현재값 확인하고 다시 지운다) 
+    SELECT LAST_NUMBER FROM USER_SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_TID';
+    ALTER SEQUENCE SEQ_TID INCREMENT BY -141;
+    
+    INSERT INTO T2( TID,TNAME)
+    VALUES (SEQ_TID.NEXTVAL,'CCC');
+    
+    ---PL/SQL문법 ---
+    BEGIN 
+        FOR I IN 1 .. 100 LOOP
+            INSERT INTO T2 (TID, TNAME)
+            VALUES (SEQ_TID.NEXTVAL,
+             DBMS_RANDOM.STRING('A',6));
+             END LOOP;
+             COMMIT;
+        END;
+        /
+        
+        SELECT * FROM T2;
+    
+    
+    SELECT SYSDATE FROM DUAL;
+    ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD';
+    
+    스토어프로시저
+    PL/SQL문법을 통해서 저장해놓는 프로시저(함수-즉 컴파일 다 된것)를 엄청 빠르게 실행한다.
+    
+    
+    ---------PL/SQL이 시작!!!!
+    PL/SQL 문장의 결과를 화면에 나타내지 않는다. 만약에 보고 싶다면
+    SET SERVEROUTPUT ON;
+    
+    --EMPID, ENAME는 변수이다
+    
+    DECLARE (선언부)
+    
+    BEGIN  (실행부)
+        SELECT
+        FROM
+        WHERE
+        DBMS_OUTPUT.PUT_LINE( 출력하고 PRINTLN같은것)
+    EXCEPTION     
+    END;
+    /
+    
+    DECLARE
+     VEMPID NUMBER(6);
+     VENAME VARCHAR2(20);
+    BEGIN  
+        SELECT  EMPLOYEE_ID, FIRST_NAME
+            INTO VEMPID,VENAME
+        FROM EMPLOYEES
+        WHERE EMPLOYEE_ID =101;
+        DBMS_OUTPUT.PUT_LINE('사번 : ' || VEMPID);
+        DBMS_OUTPUT.PUT_LINE('이름 : ' ||VENAME);
+    END;
+    /
+    
+    --문제 1. 사번이 107번인 사원의 이름과 JOB_ID를 출력해라 
+    DECLARE 
+        V_EMPID NUMBER(6);
+        V_SABUN EMPLOYEES.EMPLOYEE_ID%TYPE; --직원테이블의 직원이름의 타입을 그대로 사용하겠다
+        V_IRUM VARCHAR2(50);
+        V_JOB_ID VARCHAR2(30);
+    BEGIN
+        V_EMPID := 107;   --값을 넣는다는 의미
+        SELECT EMPLOYEE_ID, FIRST_NAME || ' ' ||LAST_NAME, JOB_ID
+            INTO V_SABUN, V_IRUM, V_JOB_ID
+        FROM EMPLOYEES
+        WHERE EMPLOYEE_ID = V_EMPID;  --같다를 의미
+        DBMS_OUTPUT.PUT_LINE('사번: ' || V_SABUN);
+        DBMS_OUTPUT.PUT_LINE('이름: ' || V_IRUM);
+        DBMS_OUTPUT.PUT_LINE('직업: ' || V_JOB_ID);
+    END;
+    /
+    
+    
+    --문제 2. 60번부서의 이름, 부서의 최고월급, 최저월급, 평균월급
+     DECLARE
+        V_DEPT_ID VARCHAR2(20);
+        V_MAX_SAL NUMBER(30);
+        V_MIN_SAL NUMBER(30);
+        V_AVG_SAL NUMBER(30);
+     BEGIN
+        V_DEPT_ID :=60;
+     SELECT DEPARTMENT_ID, MAX(SALARY), MIN(SALARY), AVG(SALARY)
+        INTO V_DEPT_ID, V_MAX_SAL, V_MIN_SAL, V_AVG_SAL
+     FROM EMPLOYEES
+     WHERE DEPARTMENT_ID = V_DEPT_ID
+     GROUP BY DEPARTMENT_ID;
+        DBMS_OUTPUT.PUT_LINE('부서이름: ' || V_DEPT_ID);
+        DBMS_OUTPUT.PUT_LINE('최고월급: ' || V_MAX_SAL);
+        DBMS_OUTPUT.PUT_LINE('최저월급: ' || V_MIN_SAL);
+        DBMS_OUTPUT.PUT_LINE('평균월급: ' || V_AVG_SAL);
+     END;
+     /
+     
+      DECLARE
+        V_DEPT_ID VARCHAR2(20);
+        V_MAX_SAL NUMBER(30);
+        V_MIN_SAL NUMBER(30);
+        V_AVG_SAL NUMBER(30);
+     BEGIN
+       
+     SELECT DEPARTMENT_ID, MAX(SALARY), MIN(SALARY), AVG(SALARY)
+        INTO V_DEPT_ID, V_MAX_SAL, V_MIN_SAL, V_AVG_SAL
+     FROM EMPLOYEES
+     WHERE DEPARTMENT_ID = 60
+     GROUP BY DEPARTMENT_ID;
+        DBMS_OUTPUT.PUT_LINE('부서이름: ' || V_DEPT_ID);
+        DBMS_OUTPUT.PUT_LINE('최고월급: ' || V_MAX_SAL);
+        DBMS_OUTPUT.PUT_LINE('최저월급: ' || V_MIN_SAL);
+        DBMS_OUTPUT.PUT_LINE('평균월급: ' || V_AVG_SAL);
+     END;
+     /
+    
+
+    -----오후
