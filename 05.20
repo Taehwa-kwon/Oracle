@@ -1,0 +1,585 @@
+docker exec -it oracle12c sqlplus
+계정은 system 비밀번호는 oracle 을 입력하면 sqlplus에 접속할 수 있다.
+
+create user hrd 202 identified by 1234;
+grant connect, resource to hrd202;
+
+conn hrd202/1234
+
+----5/20 오전     
+    --학생테이블
+CREATE TABLE STUDENT
+(
+    STNUM NUMBER(9,2) PRIMARY KEY    --123456.789 총 9자리이며 소수이하 3자리 정수자리 6자리임 
+    ,STNAME VARCHAR2(30) NOT NULL --저장되는 데이터의 양은 4천자리인데 32767변수의 길이
+    ,TEL VARCHAR2(20)
+    ,INDATE DATE DEFAULT SYSDATE  
+);
+
+drop table student;
+
+  --점수테이블( 점수번호, 과목명, 점수, 학번) 
+CREATE TABLE SCORES
+(
+    SCNUM NUMBER(6)
+    ,SUBJECT VARCHAR2(50) not null
+    ,SCORE NUMBER(3)
+        CONSTRAINT CK_SCORE CHECK (SCORE BETWEEN 0 AND 100)
+    ,STNUM NUMBER(7) 
+    ,  CONSTRAINT FK_STNUM FOREIGN KEY (STNUM) REFERENCES STUDENT(STNUM)
+    ,  CONSTRAINT PK_SCNUM PRIMARY KEY (SCNUM)
+);
+
+ --번호자동증가처리 1.sequence  2.select max(번호)+1 from 테이블)
+  
+ CREATE SEQUENCE SEQ_STNUM;
+    --학생테이블 데이터 타입
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '원석', '010-1111-1111', sysdate);
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '지현', '010-1111-1111', '20/05/01');
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '영효', '010-3333-2222', '20/05/01');
+  INSERT INTO STUDENT (STNUM,STNAME, TEL)
+ VALUES (SEQ_STNUM.NEXTVAL, '아름', '010-5253-2734');
+  INSERT INTO STUDENT (STNUM,STNAME, TEL)
+ VALUES (SEQ_STNUM.NEXTVAL, '용오', '010-1234-2734');
+  --
+ UPDATE STUDENT
+ SET TEL = '010-2222-2222', INDATE = '20/04/01'
+ WHERE STNUM =2;
+ 
+ --
+ SELECT * FROM STUDENT;
+ SELECT * FROM SCORES;
+ 
+ TRUNCATE table scores;
+ 
+ commit;
+
+    DELETE FROM STUDENT
+    WHERE STNUM=6;
+    
+    --점수테이블 데이터삽입
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 100, 4);
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 400, 4); -- 이건 범위를 걸어놔서 안됌 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '영어' , 80, 4); 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 100, 4); 
+     
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 90, 1); 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '영어' , 95, 1); 
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 85, 1); 
+
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 75, 3); 
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 100, 3); 
+
+ --모든 학생의 점수
+ SELECT ST.STNUM, ST.STNAME, SC.SUBJECT, SC.SCORE
+ FROM STUDENT ST, SCORES SC
+ WHERE ST.STNUM = SC.STNUM(+)
+ order by st.stnum asc;
+ 
+ --모든학생의 학번,이름,총점,평균 출력
+ SELECT ST.STNUM,ST.STNAME,sum(SCORE),avg(SCORE)
+ FROM STUDENT ST, SCORES SC
+ WHERE ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME
+ order by st.stnum asc;
+ 모든학생의 학번,이름,총점,평균을 출력하는데 값이 입력안된사람은 미응시라고 표시하시오
+ --SELECT ST.STNUM,ST.STNAME,nvl(to_char(sum(sc.SCORE)),'미응시') 총합,TO_CHAR(avg(sc.SCORE),'999,999') 평균
+ SELECT ST.STNUM,ST.STNAME,decode(sum(sc.score),null,'미응시',sum(sc.score)) 총점,TO_CHAR(avg(sc.SCORE),'999,999') 평균
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM
+ group by st.STNUM,st.STNAME
+ order by st.stnum asc;
+ 
+ --인라인뷰 사용해서 학번 이름 총합 평균 + 각 학점도 표시하기 
+  --SELECT STNUM, STNAME, NVL(TO_CHAR(TOTSCORE),'미응시'), AVGSCORE  --이렇게하면 문자열로 바뀌어버린다.
+  SELECT STNUM, STNAME, decode (totscore,null, '미응시', totscore) 합계,
+                        decode( AVGSCORE,null, '미응시' ,to_char(avgscore,'999.999')) 평균,
+  ' ' || 
+  case
+    WHEN AVGSCORE >= 90 THEN 'A'
+    WHEN AVGSCORE >= 80 THEN 'B'
+    WHEN AVGSCORE >= 70 THEN 'C'
+    WHEN AVGSCORE >= 60 THEN 'D'
+    WHEN AVGSCORE < 60 THEN 'E'
+    ELSE 'N/A'
+    END GRADE
+
+  FROM
+  (SELECT ST.STNUM STNUM ,ST.STNAME STNAME ,sum(SCORE) TOTSCORE ,avg(SCORE) AVGSCORE
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME) T   --이 전체를 T라는 테이블이 된다. 
+order by stnum asc;
+  
+  
+  --특정학생의 점수들을 출력하는 프로시저 
+      SET SERVEROUTPUT ON ;
+  CREATE OR REPLACE PROCEDURE SP_GETSCORE (  --원래 프로시저 만들어지면 삭제하고 다시 해야하는데 이렇게 create or replace를 통해서 알아서 새롭게 안만들어두 됌
+    IN_STNUM STUDENT.STNUM%TYPE
+    )
+  IS 
+        V_STNUM NUMBER;
+        V_STNAME VARCHAR2(30);
+        V_TOTSCORE VARCHAR2(30);
+        V_AVGSCORE VARCHAR2(30);
+        V_GRADE VARCHAR2(30);
+        
+    BEGIN
+        SELECT STNUM, STNAME, decode (totscore,null, '미응시', totscore) 합계,
+                        decode( AVGSCORE,null, '미응시' ,to_char(avgscore,'999.999')) 평균,
+  ' ' || 
+  case
+    WHEN AVGSCORE >= 90 THEN 'A'
+    WHEN AVGSCORE >= 80 THEN 'B'
+    WHEN AVGSCORE >= 70 THEN 'C'
+    WHEN AVGSCORE >= 60 THEN 'D'
+    WHEN AVGSCORE < 60 THEN 'E'
+    ELSE 'N/A'
+    END GRADE
+    
+        INTO V_STNUM, V_STNAME,V_TOTSCORE, V_AVGSCORE,V_GRADE
+    
+  FROM --인라인뷰
+  (SELECT ST.STNUM STNUM ,ST.STNAME STNAME ,sum(SCORE) TOTSCORE ,avg(SCORE) AVGSCORE
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME) T   --이 전체를 T라는 테이블이 된다. 
+ 
+ WHERE t.stnum =in_stnum; --<< 1.이걸 맨마지막에 추가 ( 이 두개가 같으면 무엇을 실행할 것인가.? ) 
+    
+    DBMS_OUTPUT.PUT_LINE('학번: ' || v_stnum );
+    DBMS_OUTPUT.PUT_LINE('이름: ' || V_STNAME );
+    DBMS_OUTPUT.PUT_LINE('총점: ' || V_TOTSCORE );
+    DBMS_OUTPUT.PUT_LINE('평균: ' || V_AVGSCORE );
+    DBMS_OUTPUT.PUT_LINE('등급: ' || V_GRADE );
+    
+    END;
+    /
+    
+    EXEC SP_GETSCORE(2);
+    
+    
+    
+    ---===============오후
+    
+    --학번을 입력받는다. 이름,전화번호를 출력하는데 out파라미터로 출력해라
+    
+    CREATE OR REPLACE PROCEDURE SP_GETSTUDENT(
+    IN_STNUM IN NUMBER,
+    OUT_STNAME OUT VARCHAR2,
+    OUT_TEL OUT VARCHAR2,
+    OUT_INDATE OUT VARCHAR2
+    )
+    IS
+    BEGIN
+    SELECT  STNAME ,TEL, TO_CHAR(INDATE, 'YYYY-MM-DD')
+    INTO OUT_STNAME , OUT_TEL, OUT_INDATE
+    FROM STUDENT
+    WHERE STNUM = IN_STNUM;
+    END;
+    /
+    
+    VAR STNAME VARCHAR2(30);
+    VAR TEL   VARCHAR2(30);
+    VAR INDATE VARCHAR2(30);
+    EXECUTE SP_GETSTUDENT( 1, :SNAME, :TEL, :INDATE)  
+    PRINT SNAME;
+    PRINT TEL;
+    PRINT INDATE;
+    
+-----------------------------------------------
+ -- 학번를 입력받아 이름, 국어, 영어, 수학 점수를 출력하는 프로시져작성
+ ------------------------------------------------
+ CREATE OR REPLACE PROCEDURE SP_GET_SCORE2(
+    IN_STNUM    IN    NUMBER,
+    OUT_STNAME  OUT   VARCHAR2,
+    OUT_KOR     OUT   NUMBER,
+    OUT_ENG     OUT   NUMBER,
+    OUT_MAT     OUT   NUMBER,
+    OUT_TOT     OUT   NUMBER,
+    OUT_AVG     OUT   NUMBER
+)
+IS
+ BEGIN    
+    SELECT  STNAME INTO OUT_STNAME FROM STUDENT
+      WHERE  STNUM = IN_STNUM;  
+    
+    SELECT  SCORE INTO OUT_KOR FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '국어';
+    SELECT  SCORE INTO OUT_ENG FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '영어';
+    SELECT  SCORE INTO OUT_MAT FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '수학';  
+      
+    SELECT  SUM(SCORE), ROUND(AVG(SCORE),2) INTO OUT_TOT, OUT_AVG 
+     FROM   SCORES
+     WHERE  STNUM = IN_STNUM;      
+ END;
+/
+
+ -- 프로시저호출은 한문장에서 실행할것 (중요)
+ -- ( EXEC 문장은 한줄에 써야한다 두줄에 쓰면 안됨)
+---- EXEC      SP_GET_SCORE2( 4, :SNAME, :KOR, :ENG, :MAT, :TOT1, :AVG1 );
+-- AVG() 함수의경우 데이터가 길어서 다른값도 출력안됨
+--- ROUND(), TO_CHAR() 로 데이터길이를 줄이고 VARCHAR2 로 출력해야 답나옴
+VAR       SNAME        VARCHAR2;
+VAR       KOR          NUMBER; 
+VAR       ENG          NUMBER;
+VAR       MAT          NUMBER;
+VAR       TOT1         NUMBER;
+VAR       AVG1         NUMBER;
+EXEC      SP_GET_SCORE2( 4, :SNAME, :KOR, :ENG, :MAT, :TOT1, :AVG1 );
+PRINT     SNAME;
+PRINT     KOR;
+PRINT     ENG;
+PRINT     MAT;
+PRINT     TOT1;
+PRINT     AVG1;
+
+--------------------------------------------------
+데이터추가프로시저
+
+
+석차
+
+PIVOT
+ --학번을 입력받는다. 이름,전화번호를 출력하는데 out파라미터로 출력해라
+    --여기서 예외처리를 한번 한다... !! 
+    CREATE OR REPLACE PROCEDURE SP_GETSTUDENT(
+    IN_STNUM IN NUMBER,
+    OUT_STNAME OUT VARCHAR2,
+    OUT_TEL OUT VARCHAR2,
+    OUT_INDATE OUT VARCHAR2
+    )
+    IS
+    BEGIN
+    SELECT  STNAME ,TEL, TO_CHAR(INDATE, 'YYYY-MM-DD')
+    INTO OUT_STNAME , OUT_TEL, OUT_INDATE
+    FROM STUDENT
+    WHERE STNUM = IN_STNUM;
+    EXCEPTION                           ----<<이부분이 
+    WHEN NO_DATA_FOUND THEN         
+        OUT_STNAME := '자료없음';        ---<<< 이부분이 
+    END;
+    /
+    
+    VAR STNAME VARCHAR2(30);
+    VAR TEL   VARCHAR2(30);
+    VAR INDATE VARCHAR2(30);
+    EXECUTE SP_GETSTUDENT( 7, :SNAME, :TEL, :INDATE)  
+    PRINT SNAME;
+    PRINT TEL;
+    PRINT INDATE;docker exec -it oracle12c sqlplus
+계정은 system 비밀번호는 oracle 을 입력하면 sqlplus에 접속할 수 있다.
+
+create user hrd 202 identified by 1234;
+grant connect, resource to hrd202;
+
+conn hrd202/1234
+
+----5/20 오전     
+    --학생테이블
+CREATE TABLE STUDENT
+(
+    STNUM NUMBER(9,2) PRIMARY KEY    --123456.789 총 9자리이며 소수이하 3자리 정수자리 6자리임 
+    ,STNAME VARCHAR2(30) NOT NULL --저장되는 데이터의 양은 4천자리인데 32767변수의 길이
+    ,TEL VARCHAR2(20)
+    ,INDATE DATE DEFAULT SYSDATE  
+);
+
+drop table student;
+
+  --점수테이블( 점수번호, 과목명, 점수, 학번) 
+CREATE TABLE SCORES
+(
+    SCNUM NUMBER(6)
+    ,SUBJECT VARCHAR2(50) not null
+    ,SCORE NUMBER(3)
+        CONSTRAINT CK_SCORE CHECK (SCORE BETWEEN 0 AND 100)
+    ,STNUM NUMBER(7) 
+    ,  CONSTRAINT FK_STNUM FOREIGN KEY (STNUM) REFERENCES STUDENT(STNUM)
+    ,  CONSTRAINT PK_SCNUM PRIMARY KEY (SCNUM)
+);
+
+ --번호자동증가처리 1.sequence  2.select max(번호)+1 from 테이블)
+  
+ CREATE SEQUENCE SEQ_STNUM;
+    --학생테이블 데이터 타입
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '원석', '010-1111-1111', sysdate);
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '지현', '010-1111-1111', '20/05/01');
+ INSERT INTO STUDENT (STNUM,STNAME, TEL, INDATE)
+ VALUES (SEQ_STNUM.NEXTVAL, '영효', '010-3333-2222', '20/05/01');
+  INSERT INTO STUDENT (STNUM,STNAME, TEL)
+ VALUES (SEQ_STNUM.NEXTVAL, '아름', '010-5253-2734');
+  INSERT INTO STUDENT (STNUM,STNAME, TEL)
+ VALUES (SEQ_STNUM.NEXTVAL, '용오', '010-1234-2734');
+  --
+ UPDATE STUDENT
+ SET TEL = '010-2222-2222', INDATE = '20/04/01'
+ WHERE STNUM =2;
+ 
+ --
+ SELECT * FROM STUDENT;
+ SELECT * FROM SCORES;
+ 
+ TRUNCATE table scores;
+ 
+ commit;
+
+    DELETE FROM STUDENT
+    WHERE STNUM=6;
+    
+    --점수테이블 데이터삽입
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 100, 4);
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 400, 4); -- 이건 범위를 걸어놔서 안됌 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '영어' , 80, 4); 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 100, 4); 
+     
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 90, 1); 
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '영어' , 95, 1); 
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 85, 1); 
+
+     INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '국어' , 75, 3); 
+    INSERT INTO SCORES ( SCNUM, SUBJECT, SCORE, STNUM)
+    VALUES ( (SELECT NVL(MAX(SCNUM),0)+1 FROM SCORES)
+    , '수학' , 100, 3); 
+
+ --모든 학생의 점수
+ SELECT ST.STNUM, ST.STNAME, SC.SUBJECT, SC.SCORE
+ FROM STUDENT ST, SCORES SC
+ WHERE ST.STNUM = SC.STNUM(+)
+ order by st.stnum asc;
+ 
+ --모든학생의 학번,이름,총점,평균 출력
+ SELECT ST.STNUM,ST.STNAME,sum(SCORE),avg(SCORE)
+ FROM STUDENT ST, SCORES SC
+ WHERE ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME
+ order by st.stnum asc;
+ 모든학생의 학번,이름,총점,평균을 출력하는데 값이 입력안된사람은 미응시라고 표시하시오
+ --SELECT ST.STNUM,ST.STNAME,nvl(to_char(sum(sc.SCORE)),'미응시') 총합,TO_CHAR(avg(sc.SCORE),'999,999') 평균
+ SELECT ST.STNUM,ST.STNAME,decode(sum(sc.score),null,'미응시',sum(sc.score)) 총점,TO_CHAR(avg(sc.SCORE),'999,999') 평균
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM
+ group by st.STNUM,st.STNAME
+ order by st.stnum asc;
+ 
+ --인라인뷰 사용해서 학번 이름 총합 평균 + 각 학점도 표시하기 
+  --SELECT STNUM, STNAME, NVL(TO_CHAR(TOTSCORE),'미응시'), AVGSCORE  --이렇게하면 문자열로 바뀌어버린다.
+  SELECT STNUM, STNAME, decode (totscore,null, '미응시', totscore) 합계,
+                        decode( AVGSCORE,null, '미응시' ,to_char(avgscore,'999.999')) 평균,
+  ' ' || 
+  case
+    WHEN AVGSCORE >= 90 THEN 'A'
+    WHEN AVGSCORE >= 80 THEN 'B'
+    WHEN AVGSCORE >= 70 THEN 'C'
+    WHEN AVGSCORE >= 60 THEN 'D'
+    WHEN AVGSCORE < 60 THEN 'E'
+    ELSE 'N/A'
+    END GRADE
+
+  FROM
+  (SELECT ST.STNUM STNUM ,ST.STNAME STNAME ,sum(SCORE) TOTSCORE ,avg(SCORE) AVGSCORE
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME) T   --이 전체를 T라는 테이블이 된다. 
+order by stnum asc;
+  
+  
+  --특정학생의 점수들을 출력하는 프로시저 
+      SET SERVEROUTPUT ON ;
+  CREATE OR REPLACE PROCEDURE SP_GETSCORE (  --원래 프로시저 만들어지면 삭제하고 다시 해야하는데 이렇게 create or replace를 통해서 알아서 새롭게 안만들어두 됌
+    IN_STNUM STUDENT.STNUM%TYPE
+    )
+  IS 
+        V_STNUM NUMBER;
+        V_STNAME VARCHAR2(30);
+        V_TOTSCORE VARCHAR2(30);
+        V_AVGSCORE VARCHAR2(30);
+        V_GRADE VARCHAR2(30);
+        
+    BEGIN
+        SELECT STNUM, STNAME, decode (totscore,null, '미응시', totscore) 합계,
+                        decode( AVGSCORE,null, '미응시' ,to_char(avgscore,'999.999')) 평균,
+  ' ' || 
+  case
+    WHEN AVGSCORE >= 90 THEN 'A'
+    WHEN AVGSCORE >= 80 THEN 'B'
+    WHEN AVGSCORE >= 70 THEN 'C'
+    WHEN AVGSCORE >= 60 THEN 'D'
+    WHEN AVGSCORE < 60 THEN 'E'
+    ELSE 'N/A'
+    END GRADE
+    
+        INTO V_STNUM, V_STNAME,V_TOTSCORE, V_AVGSCORE,V_GRADE
+    
+  FROM --인라인뷰
+  (SELECT ST.STNUM STNUM ,ST.STNAME STNAME ,sum(SCORE) TOTSCORE ,avg(SCORE) AVGSCORE
+ FROM STUDENT ST left join SCORES SC on ST.STNUM = SC.STNUM(+)
+ group by st.STNUM,st.STNAME) T   --이 전체를 T라는 테이블이 된다. 
+ 
+ WHERE t.stnum =in_stnum; --<< 1.이걸 맨마지막에 추가 ( 이 두개가 같으면 무엇을 실행할 것인가.? ) 
+    
+    DBMS_OUTPUT.PUT_LINE('학번: ' || v_stnum );
+    DBMS_OUTPUT.PUT_LINE('이름: ' || V_STNAME );
+    DBMS_OUTPUT.PUT_LINE('총점: ' || V_TOTSCORE );
+    DBMS_OUTPUT.PUT_LINE('평균: ' || V_AVGSCORE );
+    DBMS_OUTPUT.PUT_LINE('등급: ' || V_GRADE );
+    
+    END;
+    /
+    
+    EXEC SP_GETSCORE(2);
+    
+    
+    
+    ---===============오후
+    
+    --학번을 입력받는다. 이름,전화번호를 출력하는데 out파라미터로 출력해라
+    
+    CREATE OR REPLACE PROCEDURE SP_GETSTUDENT(
+    IN_STNUM IN NUMBER,
+    OUT_STNAME OUT VARCHAR2,
+    OUT_TEL OUT VARCHAR2,
+    OUT_INDATE OUT VARCHAR2
+    )
+    IS
+    BEGIN
+    SELECT  STNAME ,TEL, TO_CHAR(INDATE, 'YYYY-MM-DD')
+    INTO OUT_STNAME , OUT_TEL, OUT_INDATE
+    FROM STUDENT
+    WHERE STNUM = IN_STNUM;
+    END;
+    /
+    
+    VAR STNAME VARCHAR2(30);
+    VAR TEL   VARCHAR2(30);
+    VAR INDATE VARCHAR2(30);
+    EXECUTE SP_GETSTUDENT( 1, :SNAME, :TEL, :INDATE)  
+    PRINT SNAME;
+    PRINT TEL;
+    PRINT INDATE;
+    
+-----------------------------------------------
+ -- 학번를 입력받아 이름, 국어, 영어, 수학 점수를 출력하는 프로시져작성
+ ------------------------------------------------
+ CREATE OR REPLACE PROCEDURE SP_GET_SCORE2(
+    IN_STNUM    IN    NUMBER,
+    OUT_STNAME  OUT   VARCHAR2,
+    OUT_KOR     OUT   NUMBER,
+    OUT_ENG     OUT   NUMBER,
+    OUT_MAT     OUT   NUMBER,
+    OUT_TOT     OUT   NUMBER,
+    OUT_AVG     OUT   NUMBER
+)
+IS
+ BEGIN    
+    SELECT  STNAME INTO OUT_STNAME FROM STUDENT
+      WHERE  STNUM = IN_STNUM;  
+    
+    SELECT  SCORE INTO OUT_KOR FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '국어';
+    SELECT  SCORE INTO OUT_ENG FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '영어';
+    SELECT  SCORE INTO OUT_MAT FROM SCORES
+     WHERE  STNUM = IN_STNUM
+      AND   SUBJECT = '수학';  
+      
+    SELECT  SUM(SCORE), ROUND(AVG(SCORE),2) INTO OUT_TOT, OUT_AVG 
+     FROM   SCORES
+     WHERE  STNUM = IN_STNUM;      
+ END;
+/
+
+#NAME?
+#NAME?
+---- EXEC      SP_GET_SCORE2( 4, :SNAME, :KOR, :ENG, :MAT, :TOT1, :AVG1 );
+#NAME?
+--- ROUND(), TO_CHAR() 로 데이터길이를 줄이고 VARCHAR2 로 출력해야 답나옴
+VAR       SNAME        VARCHAR2;
+VAR       KOR          NUMBER; 
+VAR       ENG          NUMBER;
+VAR       MAT          NUMBER;
+VAR       TOT1         NUMBER;
+VAR       AVG1         NUMBER;
+EXEC      SP_GET_SCORE2( 4, :SNAME, :KOR, :ENG, :MAT, :TOT1, :AVG1 );
+PRINT     SNAME;
+PRINT     KOR;
+PRINT     ENG;
+PRINT     MAT;
+PRINT     TOT1;
+PRINT     AVG1;
+
+--------------------------------------------------
+데이터추가프로시저
+
+
+석차
+
+PIVOT
+ --학번을 입력받는다. 이름,전화번호를 출력하는데 out파라미터로 출력해라
+    --여기서 예외처리를 한번 한다... !! 
+    CREATE OR REPLACE PROCEDURE SP_GETSTUDENT(
+    IN_STNUM IN NUMBER,
+    OUT_STNAME OUT VARCHAR2,
+    OUT_TEL OUT VARCHAR2,
+    OUT_INDATE OUT VARCHAR2
+    )
+    IS
+    BEGIN
+    SELECT  STNAME ,TEL, TO_CHAR(INDATE, 'YYYY-MM-DD')
+    INTO OUT_STNAME , OUT_TEL, OUT_INDATE
+    FROM STUDENT
+    WHERE STNUM = IN_STNUM;
+    EXCEPTION                           ----<<이부분이 
+    WHEN NO_DATA_FOUND THEN         
+        OUT_STNAME := '자료없음';        ---<<< 이부분이 
+    END;
+    /
+    
+    VAR STNAME VARCHAR2(30);
+    VAR TEL   VARCHAR2(30);
+    VAR INDATE VARCHAR2(30);
+    EXECUTE SP_GETSTUDENT( 7, :SNAME, :TEL, :INDATE)  
+    PRINT SNAME;
+    PRINT TEL;
+    PRINT INDATE;
