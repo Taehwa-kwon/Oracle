@@ -208,6 +208,61 @@
     -----------------------------------------------
      -- 학번를 입력받아 이름, 국어, 영어, 수학 점수를 출력하는 프로시져작성
      ------------------------------------------------
+         -------선생님
+        CREATE OR REPLACE PROCEDURE SP_GETKORENGMAT_SCORE(
+     IN_STNUM IN NUMBER,
+     OUT_STNAME OUT VARCHAR2,
+     OUT_KOR OUT NUMBER,
+     OUT_ENG OUT NUMBER,
+     OUT_MAT OUT NUMBER,
+     OUT_TOT OUT NUMBER,
+     OUT_AVG OUT NUMBER
+    )
+    IS
+        BEGIN
+    SELECT STNAME into out_STNAME
+    FROM STUDENT
+    WHERE STNUM =IN_STNUM;
+        
+    SELECT SCORE into out_kor
+    FROM SCORES
+    WHERE STNUM =IN_STNUM
+    and subject = '국어';
+
+    SELECT SCORE into out_eng
+    FROM SCORES
+    WHERE STNUM =IN_STNUM
+    and subject = '영어';    
+    
+    SELECT SCORE into out_mat
+    FROM SCORES
+    WHERE STNUM =IN_STNUM
+    and subject = '수학';
+    
+    SELECT SUM(SCORE),avg(score) INTO OUT_TOT,OUT_AVG 
+    FROM SCORES
+    WHERE STNUM = IN_STNUM;
+   
+    
+    end;
+    /
+    
+   VARIABLE SNAME VARCHAR2(30);
+    VARIABLE KOR NUMBER(10);
+    VARIABLE ENG NUMBER(10);
+    VARIABLE MAT NUMBER(10);
+    VARIABLE TOTSCORE NUMBER(10);
+    VARIABLE AVGSCORE NUMBER(10);
+    EXEC SP_GETKORENGMAT_SCORE ( 1, :SNAME ,:KOR, :ENG, :MAT, :TOTSCORE, :AVGSCORE)
+    PRINT SNAME;
+    PRINT KOR;      반드시 개별적으로 적어줘야한다
+    PRINT ENG;
+    PRINT MAT;
+    PRINT TOTSCORE;
+    PRINT AVGSCORE;
+    
+    ------
+     
      CREATE OR REPLACE PROCEDURE SP_GET_SCORE2(
         IN_STNUM    IN    NUMBER,
         OUT_STNAME  OUT   VARCHAR2,
