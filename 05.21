@@ -1,0 +1,296 @@
+HR
+    --05/21---
+    SELECT DEPARTMENT_ID, COUNT(EMPLOYEE_ID)
+     FROM  EMP4
+     GROUP BY DEPARTMENT_ID
+      HAVING COUNT(EMPLOYEE_ID) = 1;
+      
+    SELECT FIRST_NAME FROM EMP4
+     WHERE DEPARTMENT_ID IN (40, 70)
+    
+    SELECT DEPARTMENT_ID FROM EMP4
+     WHERE FIRST_NAME = 'Hermann'
+    
+    select * from emp4
+     WHERE DEPARTMENT_ID = 30
+    
+    set serveroutput on;
+    begin
+        V_DEPT_ID       NUMBER(30);
+        v_emp_id        NUMBER(30);
+        in_first_name   VARCHAR2(50);
+    BEGIN
+      in_first_name := 'ermann';
+      SELECT DEPARTMENT_ID 
+        INTO V_DEPT_ID
+        FROM EMP4
+        WHERE FIRST_NAME = in_first_name;
+    
+      select employee_id 
+        into v_emp_id 
+        from emp4
+        WHERE DEPARTMENT_ID = V_DEPT_ID;
+      dbms_output.put_line(v_emp_id);  
+    
+      exception
+        when  NO_DATA_FOUND THEN
+           dbms_output.put_line(  in_first_name || '자료가 없어요' );  
+        when  others then
+           dbms_output.put_line('문제발생:' || sqlerrm );  
+           
+    END;
+    /
+    
+    
+    set serveroutput on;
+    CREATE OR REPLACE PROCEDURE SP_GETDATA(
+         in_first_name   VARCHAR2
+    )
+    IS
+        V_DEPT_ID       NUMBER(30);
+        v_emp_id        NUMBER(30);   
+    BEGIN
+      --in_first_name := 'ermann';
+      SELECT DEPARTMENT_ID 
+        INTO V_DEPT_ID
+        FROM EMP4
+        WHERE FIRST_NAME = in_first_name;
+    
+      select employee_id 
+        into v_emp_id 
+        from emp4
+        WHERE DEPARTMENT_ID = V_DEPT_ID;
+      dbms_output.put_line(v_emp_id);  
+    
+      exception
+        when  NO_DATA_FOUND THEN
+           dbms_output.put_line(  in_first_name || '자료가 없어요' );  
+        when  others then
+           dbms_output.put_line('문제발생:' || sqlerrm );  
+           
+    END;
+    /
+    
+    EXEC SP_GETDATA('Hermann');
+    
+    ------------------------------------------
+    부서별인원수
+    SELECT     DEPARTMENT_ID, COUNT(*)
+     FROM      EMP4
+     GROUP BY  DEPARTMENT_ID
+     ORDER BY  2 DESC
+     
+    자료에 번호를 부여한다
+    
+    SELECT ROWNUM RN, EMPLOYEE_ID, SALARY 
+     FROM
+    ( 
+       SELECT      EMPLOYEE_ID, SALARY, DEPARTMENT_ID 
+         FROM      EMPLOYEES     
+         ORDER BY  SALARY DESC 
+    ) T
+    WHERE DEPARTMENT_ID = 50;
+    
+     ----------------------------------------------
+    석차
+    ROW_NUMBER() - 줄번호
+    RANK()       - 석차
+    DENSE_RABK() - 석차
+    
+    -- 순서대로 번호출력
+    SELECT  EMPLOYEE_ID, FIRST_NAME, SALARY,
+            ROW_NUMBER() OVER (ORDER BY SALARY DESC)    순번        
+     FROM   EMPLOYEES 
+    -- 석차 : 8, 8, 10  
+     SELECT  EMPLOYEE_ID, FIRST_NAME, SALARY,
+             RANK() OVER (ORDER BY SALARY DESC)    순번        
+     FROM   EMPLOYEES 
+    --- 석차 : 8, 8, 9 
+    SELECT  EMPLOYEE_ID, FIRST_NAME, SALARY,
+            DENSE_RANK() OVER (ORDER BY SALARY DESC)    순번        
+     FROM   EMPLOYEES 
+     
+   ------------------------------
+CURSOR - 커서
+  조회한 결과가 여러개 일때 필요한 객체
+  
+ 1) 묵시적 커서 : IMPLICIT 
+ 묵시적 커서 속성
+속성명
+SQL%FOUND
+SQL%NOTFOUND
+SQL%ROWCOUNT
+SQL%ISOPEN
+                묵시적 커서는 닫힌 상태 이후이기 때문)
+ 
+DECLARE  
+    IN_DEPARTMENT_ID NUMBER(30) := 50;
+  BEGIN
+    UPDATE EMP4
+     SET   SALARY = SALARY * 1.1
+    WHERE  DEPARTMENT_ID = IN_DEPARTMENT_ID;
+    DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT);
+  END;
+/
+ 
+ 2) 명시적커서 : EXPLICIT 
+    
+    DECLARE 
+      V_FIRST_NAME   VARCHAR2(50); 
+      CURSOR CUR_EMP ( IN_DEPTID  EMP4.DEPARTMENT_ID%TYPE )
+       IS
+         SELECT   FIRST_NAME
+          FROM    EMP4
+          WHERE   DEPARTMENT_ID = IN_DEPTID;
+    BEGIN
+      OPEN    CUR_EMP( 50 );
+      FETCH   CUR_EMP  INTO  V_FIRST_NAME;
+      DBMS_OUTPUT.PUT_LINE(V_FIRST_NAME);
+      FETCH   CUR_EMP  INTO  V_FIRST_NAME;
+      DBMS_OUTPUT.PUT_LINE(V_FIRST_NAME);
+       FETCH   CUR_EMP  INTO  V_FIRST_NAME;
+      DBMS_OUTPUT.PUT_LINE(V_FIRST_NAME);
+      CLOSE   CUR_EMP;
+    END;
+    /
+ ------------------------------------
+   DECLARE 
+      V_FIRST_NAME   VARCHAR2(50); 
+      CNT            NUMBER;
+      CURSOR CUR_EMP ( IN_DEPTID  EMP4.DEPARTMENT_ID%TYPE )
+       IS
+         SELECT   FIRST_NAME
+          FROM    EMP4
+          WHERE   DEPARTMENT_ID = IN_DEPTID;
+    BEGIN
+      CNT := 1;
+      OPEN    CUR_EMP( 50 );
+
+      LOOP
+          FETCH   CUR_EMP  INTO  V_FIRST_NAME;          
+          EXIT WHEN  CUR_EMP%NOTFOUND;          
+          DBMS_OUTPUT.PUT_LINE(TO_CHAR(CNT, '0999') || ' '  || V_FIRST_NAME);
+          CNT := CNT + 1;
+      END LOOP;
+
+      CLOSE   CUR_EMP;
+    END;
+    /
+ ----------------------------------------------------
+#NAME?
+   DECLARE 
+     CURSOR CUR_EMP2 (  IN_DEPTID EMP4.DEPARTMENT_ID%TYPE  )
+     IS
+      SELECT  *
+       FROM   EMP4
+       WHERE  DEPARTMENT_ID = IN_DEPTID;
+  BEGIN
+    FOR EMP_REC IN CUR_EMP2(50) 
+    LOOP
+       DBMS_OUTPUT.PUT_LINE(
+          EMP_REC.EMPLOYEE_ID || '.' || EMP_REC.FIRST_NAME || ' ' || EMP_REC.LAST_NAME);       
+    END LOOP;
+  END;
+  /
+  
+  DECLARE
+  BEGIN
+    FOR EMP IN (
+       SELECT * FROM EMPLOYEES
+        WHERE  DEPARTMENT_ID = 50 
+    )  
+    LOOP
+       DBMS_OUTPUT.PUT_LINE(EMP.FIRST_NAME);    
+    END LOOP;    
+  END;
+  /
+ -----------------------------------
+   CURSOR 변수
+
+  DECLARE
+    V_EMP_NAME   EMPLOYEES.FIRST_NAME%TYPE;    
+    -- 강한 커서 타입 : 타입을 강력하게 제한한다
+   --  TYPE  EMP_CUR_TYPE IS REF CURSOR RETURN EMPLOYEES%ROWTYPE
+    -- 액한 커서 타입 : 타입에 대한 융동성
+    TYPE  EMP_CUR_TYPE IS REF CURSOR;
+    CUR_EMP3      EMP_CUR_TYPE;    
+  BEGIN
+    OPEN CUR_EMP3  
+      FOR SELECT  FIRST_NAME  FROM   EMPLOYEES
+           WHERE  DEPARTMENT_ID = 50;
+      LOOP
+        FETCH  CUR_EMP3 INTO V_EMP_NAME;
+        EXIT WHEN CUR_EMP3%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE( V_EMP_NAME ) ;
+      END LOOP;
+  END;
+  /
+ 
+ -------------------------------------
+ SYS_REFCURSOR : 오라클 빌트인 커서 타입
+ 
+DECLARE
+  V_EMP      EMPLOYEES.FIRST_NAME%TYPE; 
+  CUR_EMP4   SYS_REFCURSOR;
+BEGIN
+  OPEN CUR_EMP4 FOR SELECT  FIRST_NAME
+                     FROM   EMPLOYEES
+                     WHERE  DEPARTMENT_ID = 50;  
+  LOOP
+    FETCH  CUR_EMP4 INTO V_EMP;
+    EXIT WHEN  CUR_EMP4%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(  V_EMP );
+  END LOOP;  
+  CLOSE CUR_EMP4;
+END;
+/
+
+   create or replace  PROCEDURE test_cur_arg ( 
+      p_cur IN OUT SYS_REFCURSOR   )
+      IS
+         temp_cur SYS_REFCURSOR;
+      BEGIN
+        OPEN temp_cur 
+        FOR
+         SELECT first_name
+           FROM employees
+          WHERE department_id = 50;
+
+        p_cur := temp_cur;
+      END;
+     /
+
+ DECLARE
+      cur_emp5    SYS_REFCURSOR;
+      v_emp_name  employees.first_name%TYPE;
+    BEGIN
+      test_cur_arg ( cur_emp5 );
+      LOOP  
+        FETCH cur_emp5 INTO v_emp_name;  
+        EXIT WHEN cur_emp5%notfound;  
+        dbms_output.put_line(v_emp_name);
+      END LOOP;
+    END;
+    /
+  ----------------------------
+ ORACLE 일반 FOR
+    FOR 변수 IN [REVERSE] 초기값 .. 최종값 
+    LOOP
+      반복내용
+    END LOOP;  
+    
+    FOR I   IN  1.. 100
+    LOOP
+       TOT := TOT + I;
+    END LOOP;
+   
+   FOR I   IN  REVERSE 100 .. 1
+    LOOP
+       TOT := TOT + I;
+    END LOOP;
+    
+    증가치는 무조건 1
+ 
+   SELECT   FIRST_NAME
+          FROM    EMP4
+          WHERE   DEPARTMENT_ID = 50;
