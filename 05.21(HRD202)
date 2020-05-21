@@ -1,0 +1,97 @@
+HRD202 
+    부서별 인원수
+    select department_id, count(*)
+    from emp4
+    group by department_id
+    order by count(*);
+    
+    자료에 순위를 부여한다
+    
+    일단 이거는 안됌 - rownum 은 sorting이 되는순간 엉망진창
+    select employee_id ,  salary ,rownum
+    from emp4
+    where department_id = 50
+    order by salary desc ;
+    
+    아직 번호를 안붙힘
+    select *
+    from (
+    select employee_id ,  salary 
+    from emp4
+    where department_id = 50
+    order by salary desc ) T;
+
+    석차
+    row_number()   - 줄 번호를 의미  1,2,3등으로 어떻게든 나눔
+    rank()   - 1등이 2명이면 다음은 3등
+    dense_rank()  - 1등이 2명이면 다음은 2등
+    
+    <순위함수이름>() OVER(
+
+
+    
+    select employee_id, first_name, salary,
+            row_number() over(order by salary desc) 석차
+    from emp4;
+    
+    select employee_id, first_name, salary,
+            rank() over(order by salary desc) 석차
+    from emp4;
+    
+    select employee_id, first_name, salary,
+            dense_rank() over(order by salary desc) 석차
+    from emp4;
+
+    
+    ----
+CREATE TABLE T_SCORE
+(
+    T_SCORE_ID NUMBER(10) PRIMARY KEY,
+    YEARS VARCHAR2(4),
+    GUBUN VARCHAR2(30),
+    SUBJECT VARCHAR2(30),
+    SCORE NUMBER(3)
+);
+
+CREATE SEQUENCE SEQ_TID;
+
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '중간', '국어', 90);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '중간', '수학', 56);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '중간', '영어', 87);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '중간', '과학', 76);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '기말', '국어', 82);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '기말', '수학', 66);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '기말', '영어', 91);
+INSERT INTO T_SCORE VALUES (SEQ_TID.NEXTVAL, '2020', '기말', '과학', 88);
+
+COMMIT;
+
+SELECT *FROM T_SCORE;
+
+SELECT YEARS, GUBUN, SUM(국어), SUM(수학), SUM(영어), SUM(과학) 
+FROM (
+    SELECT YEARS, GUBUN,
+        CASE WHEN SUBJECT = '국어' THEN SCORE ELSE 0 END 국어,
+        CASE WHEN SUBJECT = '수학' THEN SCORE ELSE 0 END 수학,
+        CASE WHEN SUBJECT = '영어' THEN SCORE ELSE 0 END 영어,
+        CASE WHEN SUBJECT = '과학' THEN SCORE ELSE 0 END 과학
+        FROM T_SCORE T
+    )
+GROUP BY YEARS, GUBUN;
+    
+    
+만약에 국어랑 같으면 점수를 나타내고 아니면  0점. End뒤에는 ALIAS
+    
+    
+
+
+
+< PIVOT >
+SELECT 컬럼
+FROM (조회할 데이터 SELECT문) OR 테이블
+PIVOT(집계함수(표현식) FOR 피벗대상컬럼 IN (행으로 올릴 열));
+
+< UNPIVOT >
+SELECT 컬럼
+FROM (조회할 데이터 SELECT문) OR 테이블
+UNPIVOT(가상 컬럼1) FOR (가상 컬럼2) IN (열으로 내릴 행컬럼));
