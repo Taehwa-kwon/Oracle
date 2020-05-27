@@ -207,19 +207,31 @@ EXCEPTION
         WHEN NO_DATA%FOUND THEN OUT_MEMID := 'NO DATA';
         WHEN OTHERS     THEN OUT_MEMUID := 'ERROR:'||SQLERRM;
         
------------------------------------------------       
-create or replace procedure spdelmember(
-    in_MEMID IN varchar2
-    out_aftcnt out number
+-----------------------------------------------------
+삭제   SPDELMEMBER
+-----------------------------------------------------
+CREATE  OR  REPLACE  PROCEDURE SPDELMEMBER(
+     IN_MEMID    IN    VARCHAR2,
+     OUT_AFTCNT  OUT   NUMBER
 )
-is
-    begin
-        delete from member where memid = in_memid;
-        
-        out_aftcnt := sql%rowcount; --실행된 라인 수를 알려준다. 
-    execption 
-        when others then
-         out_aftcnt := 0;
-        end;
-        /
-        
+IS
+ BEGIN
+    DELETE FROM MEMBER
+      WHERE  MEMID  = IN_MEMID;
+      
+    OUT_AFTCNT := SQL%ROWCOUNT;   --실행된 라인수를 알려준다. 
+   EXCEPTION
+     WHEN  OTHERS  THEN
+       OUT_AFTCNT := 0;
+ END;
+ /
+ 
+ SELECT * FROM MEMBER;
+ rollback
+ 
+ var   v_aftcnt   number;
+ EXEC  SPDELMEMBER('sky4', :v_aftcnt);
+ print  v_aftcnt;
+
+ DELETE FROM MEMBER
+      WHERE  MEMID  = 'sky7';
