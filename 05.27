@@ -1,0 +1,208 @@
+C:\Users\PKNU>sqlplus /nolog
+SQL*Plus: Release 11.2.0.2.0 Production on 화 5월 26 16:06:11 2020
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+SQL> conn / as sysdba
+Connected.
+SQL> show user
+USER is "SYS"
+SQL> create user jdbctest identified by 1234;
+User created.
+SQL> grant  CONNECT,RESOURCE to jdbctest;
+Grant succeeded.
+SQL>
+
+---------------------------------------------
+!! 테이블 생성 !! 
+---------------------------------------------
+CREATE TABLE MEMBER
+(
+     MEMID    VARCHAR2(12)  PRIMARY KEY
+    ,MNAME    VARCHAR2(30)  NOT  NULL
+    ,EMAIL    VARCHAR2(320)
+    ,PASSWD   VARCHAR2(12)
+    ,PHONE    VARCHAR2(20)
+    ,REGDATE  DATE         DEFAULT SYSDATE
+    ,MPOINT   NUMBER(7)    DEFAULT 1000 
+);
+
+MEMID
+MNAME
+EMAIL
+PASSWD
+PHONE
+REGDATE
+MPOINT
+-------------------------------------------------------------------;
+SELECT   memid, mname, email, passwd, phone, regdate, mpoint
+ FROM    member;
+ 
+ INSERT INTO member ( memid, mname, email, passwd, phone)
+  VALUES (             :v0,  :v1,    :v2,  :v3,    :v4,  );
+  
+UPDATE member  SET
+        mname = :v1 , email   = :v2, passwd = :v3, 
+        phone = :v4,  regdate = :v5, mpoint = v6
+ WHERE memid  = :v0
+  and  passwd = :v1;
+
+DELETE FROM member
+ WHERE memid = :v0 and passwd = :v1;
+ 
+-------------------------------------------------------------
+프로시저 (procedure) 
+--------------------------------------------------------------
+매개변수에는 타입의 크기를 지정하지 않는다. 
+decleare 은 변수를 정의하는 곳이며 크기를 지정해주고
+---------------------------------------------
+
+CREATE OR REPLACE PROCEDURE  SPADDMEMBER (   
+    IN_MEMID   IN    VARCHAR2,
+    IN_MNAME   IN    VARCHAR2,
+    IN_EMAIL   IN    VARCHAR2, 
+    IN_PASSWD  IN    VARCHAR2, 
+    IN_PHONE   IN    VARCHAR2
+)
+IS
+  BEGIN
+    INSERT INTO MEMBER ( MEMID, MNAME, EMAIL, PASSWD, PHONE )
+     VALUES ( IN_MEMID, IN_MNAME, IN_EMAIL, IN_PASSWD, IN_PHONE );
+    COMMIT;  
+  END;
+  /
+
+--CALL  SPADDMEMBER( :V0, :V1, :V2, :V3, :V4   )
+CALL  SPADDMEMBER( 'sky1', '영효', 
+   'yh@naver.com', '1234', '010-1111-1111'   )
+
+select * from member
+
+-------------------------------------------
+SPGETMEMBER : 개인조회
+-------------------------------------------
+CREATE  OR REPLACE  PROCEDURE   SPGETMEMBER  (
+    IN_MEMID      IN    MEMBER.MEMID%TYPE,    
+    OUT_MEMID     OUT   MEMBER.MEMID%TYPE,    
+    OUT_MNAME     OUT   member.mname%TYPE,
+    OUT_EMAIL     OUT   member.email%TYPE,
+    OUT_PASSWD    OUT   member.passwd%TYPE,
+    OUT_PHONE     OUT   member.phone%TYPE,    
+    OUT_REGDATE   OUT   VARCHAR2,
+    OUT_MPOINT    OUT   member.mpoint%TYPE,
+    OUT_MLEVEL    OUT   VARCHAR2
+)
+IS
+  BEGIN
+    SELECT  MEMID, MNAME, EMAIL, PASSWD, PHONE, 
+            TO_CHAR(REGDATE, 'YYYY-MM-DD HH24:MI:SS DAY') RDATE,
+            MPOINT,
+            CASE  
+              WHEN MPOINT BETWEEN 1000 AND 2999   THEN  '새싹회원'
+              WHEN MPOINT BETWEEN 3000 AND 6999   THEN  '떡입회원'
+              WHEN MPOINT BETWEEN 7000 AND 20000  THEN  '나무회원'
+              WHEN MPOINT >= 20000                THEN  '숲회원'
+              ELSE                                      '나뿐회원' 
+            END   MLEVEL
+            INTO 
+              OUT_MEMID, OUT_MNAME,   OUT_EMAIL, OUT_PASSWD,
+              OUT_PHONE, OUT_REGDATE, OUT_MPOINT, OUT_MLEVEL
+      FROM   MEMBER
+      WHERE  MEMID = IN_MEMID;
+  END;
+/  
+
+VAR   V_MEMID    VARCHAR2;
+VAR   V_MNAME    VARCHAR2;
+VAR   V_EMAIL    VARCHAR2;
+VAR   V_PASSWD   VARCHAR2;
+VAR   V_PHONE    VARCHAR2;
+VAR   V_REGDATE  VARCHAR2;
+VAR   V_MLEVEL   VARCHAR2;
+VAR   V_MPOINT   VARCHAR2;
+EXEC  SPGETMEMBER( 'sky1', :V_MEMID, :V_MNAME, :V_EMAIL, :V_PASSWD, :V_PHONE, :V_REGDATE,:V_MPOINT, :V_MLEVEL );
+PRINT  V_MEMID;
+PRINT  V_MNAME;
+PRINT  V_EMAIL;
+print  V_PASSWD;
+PRINT  V_PHONE;
+PRINT  V_REGDATE;
+PRINT  V_MPOINT;
+PRINT  V_MLEVEL;
+
+---------------------------------------------
+SPGETMEMBERLIST : 목록 조회 cursor
+---------------------------------------------
+설명 : surMEMBER 은  커서의 타입(sys_refcursor) 을 out 한다
+open은 커서에 대한 내용을 실행한다는 것이고, for은 여기에 대해서 설명
+---------------------------------------------
+
+CREATE  OR REPLACE  PROCEDURE   SPGETMEMBERLIST(
+   curMEMBER    OUT    SYS_REFCURSOR   
+) 
+IS
+  BEGIN
+    OPEN  curMEMBER  FOR
+      SELECT   memid, mname, email, phone, 
+               TO_CHAR(regdate, 'YY-MM-DD') REGDATE, 
+               CASE  
+                  WHEN MPOINT BETWEEN 1000 AND 2999   THEN  '새싹회원'
+                  WHEN MPOINT BETWEEN 3000 AND 6999   THEN  '떡입회원'
+                  WHEN MPOINT BETWEEN 7000 AND 20000  THEN  '나무회원'
+                  WHEN MPOINT >= 20000                THEN  '숲회원'
+                  ELSE                                      '나뿐회원' 
+               END   MLEVEL
+      FROM   MEMBER
+      ORDER  BY  MEMID ASC; 
+  END;
+/  
+
+---------------------------------------------
+-- 커서 테스트 memid, mname, email, phone, regdate, mlevel
+DECLARE로 커서의 변수를 선언해주고 
+BEGIN으로 실행문 시작. 
+프로시저spgetmemberlist에 커서v_refcursor을 매개변수로 전달해주고 
+LOOP(반복문)시작 ~ FETCH v_refcursor의 경로에 다가 INTO값을 넣어주고 
+여기서 주의할께 EXIT WHEN v_refcursor%NOTFOUND; 여기에 값이 없다면 루프를 빠져나간다. -> END LOOP로 
+만약 값이 있다면 DBMS_OUTPUT.PUT_LINE이 실행 
+
+---------------------------------------------
+SET SERVEROUTPUT ON
+DECLARE
+   v_refcursor    SYS_REFCURSOR;   
+   memid             VARCHAR2(4000);
+   mname             VARCHAR2(4000);
+   email             VARCHAR2(4000);
+   phone             VARCHAR2(4000);
+   regdate             VARCHAR2(4000);
+   mlevel             VARCHAR2(4000);
+BEGIN
+   dbms_output.put_line('조회결과');
+   spgetmemberlist(v_refcursor);
+   LOOP
+     FETCH  v_refcursor INTO  memid, mname, email, phone, regdate, mlevel;
+     EXIT WHEN  v_refcursor%NOTFOUND;
+     dbms_output.put_line(memid || ','  || mname || ','  ||email || ','  || phone|| ','  ||regdate || ','  ||mlevel);
+   END LOOP;
+   CLOSE V_REFCURSOR;   
+END;
+/
+
+-----------------------------------------------
+전체 인원수 조회
+-----------------------------------------------
+CREATE  OR  REPLACE   PROCEDURE  SPGETMEMCOUNT (
+    OUT_MEMCNT  OUT  NUMBER
+)    
+IS    
+ BEGIN
+    SELECT  COUNT(MEMID) INTO OUT_MEMCNT FROM  MEMBER;
+ END;
+/ 
+
+-----------------------------------------------
+VAR  V_MEMCNT  NUMBER
+EXEC SPGETMEMCOUNT( :V_MEMCNT   )
+PRINT  V_MEMCNT
+
+
+
+
