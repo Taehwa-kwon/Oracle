@@ -188,7 +188,7 @@ PRINT  V_MEMCNT
 
 
 -----------------------------------------------
-업데이트 프로시저
+업데이트 프로시저   // http://www.gurubee.net/lecture/1052
 -----------------------------------------------
 create or replace procedure SPUPDATEMEMBER(
     in_MEMID in MEMBER.MEMID%TYPE,
