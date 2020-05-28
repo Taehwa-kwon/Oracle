@@ -153,19 +153,19 @@ IS
 SET SERVEROUTPUT ON
 DECLARE
    v_refcursor    SYS_REFCURSOR;   
-   v1             VARCHAR2(4000);
-   v2             VARCHAR2(4000);
-   v3             VARCHAR2(4000);
-   v4             VARCHAR2(4000);
-   v5             VARCHAR2(4000);
-   v6             VARCHAR2(4000);
+   memid             VARCHAR2(4000);
+   mname             VARCHAR2(4000);
+   email             VARCHAR2(4000);
+   phone             VARCHAR2(4000);
+   regdate             VARCHAR2(4000);
+   mlevel             VARCHAR2(4000);
 BEGIN
    dbms_output.put_line('조회결과');
    spgetmemberlist(v_refcursor);
    LOOP
-     FETCH  v_refcursor INTO  v1, v2, v3, v4, v5, v6;
+     FETCH  v_refcursor INTO  memid, mname, email, phone, regdate, mlevel;
      EXIT WHEN  v_refcursor%NOTFOUND;
-     dbms_output.put_line(V1 || ','  || V2);
+     dbms_output.put_line(memid || ','  || mname || ','  || email  || ','  || phone || ','  ||regdate  || ','  ||mlevel );
    END LOOP;
    CLOSE V_REFCURSOR;   
 END;
@@ -192,13 +192,39 @@ PRINT  V_MEMCNT
 -----------------------------------------------
 create or replace procedure SPUPDATEMEMBER(
     in_MEMID in MEMBER.MEMID%TYPE,
-    in_Email out MEMBER.MEMID%TYPE,
-    in_passwd out MEMBER.MEMID%TYPE,
-    in_phone out MEMBER.MEMID%TYPE
+    in_Email in MEMBER.MEMID%TYPE,
+    in_passwd in MEMBER.MEMID%TYPE,
+    in_phone in MEMBER.MEMID%TYPE
     )
 IS
+    --수정 데이터 확인하기 위한 변수 선언
+    v_member member&rowtype;
+
     BEGIN 
-        UPDATE MEMBER set Email 
+        UPDATE MEMBER set Email=in_Eamil, passwd=in_passwd, phone=in_phone
+        where memid = in_memid;
+        commit;
+        DBMS_OUTPUT.PUT_LINE('데이터 수정 성공');
+        
+        --수정된 데이터 확인하기 위해 검색
+        
+        select memid, email, passwd, phone
+        into v_member.memid, v_member.email, v_member.passwd, v_member.phone
+        from member
+        where memid = in_memid;
+        
+        DBMS_OUTPUT.PUT_LINE ( '***수 정 확 인 ****');
+        DBMS_OUTPUT.PUT_LINE( '사원번호 : ' || v_member.memid );
+        DBMS_OUTPUT.PUT_LINE( '사원이메일 : ' || v_member.email );
+        DBMS_OUTPUT.PUT_LINE( '사원패스워드 : ' || v_member.passwd );
+        DBMS_OUTPUT.PUT_LINE( '사원핸드폰번호  : ' || v_member.phone );
+
+        END ;
+        /
+
+-- DBMS_OUTPUT.PUT_LINE을 출력하기 위해 사용
+SQL> SET SERVEROUTPUT ON ;  
+
  
  -----------------------------------------------
 삭제 프로시저
