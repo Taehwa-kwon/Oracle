@@ -1,30 +1,35 @@
+1. ì—”í‹°í‹°: ìƒí’ˆê³¼ ë©¤ë²„ -> í–‰ìœ„í…Œì´ë¸” ORDERS    -> ì œ1ì •ê·œí™”ì™€ ì œ2ì •ê·œí™”
+2. 1:Në°©ì‹ì˜ JOIN  || N:M ë°©ì‹ì˜ ì¸ë¼ì¸ ì¿¼ë¦¬ || í…Œì´ë¸” 3ê°œì˜ JOIN (LEFT JOIN)
+3. ì œ1~ì œ3 ì •ê·œí™”ì˜ ê°œë…(í•„ê¸°0615ì°¸ì¡°) í”„ë¡œì‹œì €,í•¨ìˆ˜ì˜ ê¸°ë³¸ê¸°ë³¸ê¸°ë³¸ ê°œë… 
+
+
 CREATE TABLE PRODUCTS
 (
-    PR_ID CHAR(4) NOT NULL,  --»óÇ° ID
-    PR_NAME VARCHAR2(20) NOT NULL, --»óÇ° ÀÌ¸§
-    PR_PRICE NUMERIC(6,2) NOT NULL, --»óÇ° °¡°Ý
-    PR_QTY NUMERIC(4) NOT NULL  --»óÇ° °³¼ö
+    PR_ID CHAR(4) NOT NULL,  --ìƒí’ˆ ID
+    PR_NAME VARCHAR2(20) NOT NULL, --ìƒí’ˆ ì´ë¦„
+    PR_PRICE NUMERIC(6,2) NOT NULL, --ìƒí’ˆ ê°€ê²©
+    PR_QTY NUMERIC(4) NOT NULL  --ìƒí’ˆ ê°œìˆ˜
 );
 CREATE TABLE MEMBERS
 (
-    M_ID CHAR(4) NOT NULL, --°í°´ ID
-    M_NAME VARCHAR(20) NOT NULL --°í°´ ÀÌ¸§
+    M_ID CHAR(4) NOT NULL, --ê³ ê° ID
+    M_NAME VARCHAR(20) NOT NULL --ê³ ê° ì´ë¦„
 
 );
 CREATE TABLE ORDERS
 (
-    M_ID CHAR(4) NOT NULL, --±¸¸Å ID
-    PR_ID CHAR(4) NOT NULL, -- °¡°ÝID
-    O_ID NUMERIC(7) NOT NULL, -- ±¸¸ÅÇÑ ID
-    QTY NUMERIC(7) NOT NULL --¼ö·®
-    --O_TIME DATE  ÀÌ·¸°Ô ÇØ¼­ ±¸¸ÅID,°¡°ÝID,½Ã°£À» º¹ÇÕÅ°·Î ÇÑ´Ù. ±Ùµ¥ ÀÌ ¹æ¹ýÀº ¼Óµµ°¡ ¸Å¿ì ´À·ÁÁø´Ù.
+    M_ID CHAR(4) NOT NULL, --ê³ ê° ID
+    PR_ID CHAR(4) NOT NULL, -- ìƒí’ˆ ID
+    O_ID NUMERIC(7) NOT NULL, -- êµ¬ë§¤í•œ ID(ë³„ë„ì˜ ìƒí’ˆë³„ êµ¬ë¶„)
+    QTY NUMERIC(7) NOT NULL --ìˆ˜ëŸ‰
+    --O_TIME DATE  ì´ë ‡ê²Œ í•´ì„œ êµ¬ë§¤ID,ê°€ê²©ID,ì‹œê°„ì„ ë³µí•©í‚¤ë¡œ í•œë‹¤. ê·¼ë° ì´ ë°©ë²•ì€ ì†ë„ê°€ ë§¤ìš° ëŠë ¤ì§„ë‹¤.
 );
 --
-INSERT INTO PRODUCTS VALUES('P001','»õ¿ì±ø',300.399,30);
-INSERT INTO PRODUCTS VALUES('P001','¸Þ·Î³ª',500,50);
+INSERT INTO PRODUCTS VALUES('P001','ìƒˆìš°ê¹¡',300.399,30);
+INSERT INTO PRODUCTS VALUES('P001','ë©”ë¡œë‚˜',500,50);
 --
-INSERT INTO MEMBERS VALUES('M001','È«±æµ¿');
-INSERT INTO MEMBERS VALUES('M002','Àü¿ìÄ¡');
+INSERT INTO MEMBERS VALUES('M001','í™ê¸¸ë™');
+INSERT INTO MEMBERS VALUES('M002','ì „ìš°ì¹˜');
 --
 INSERT INTO ORDERS VALUES('M001','P001',1,5);
 INSERT INTO ORDERS VALUES('M001','P002',2,7);
@@ -41,7 +46,7 @@ COMMIT;
 	AND T2.PR_ID = T3.PR_ID;
     
 
---1.ÇÐ»ý
+--1.í•™ìƒ
 CREATE TABLE STUDENTS
 (
     S_ID CHAR(4) NOT NULL PRIMARY KEY,
@@ -52,13 +57,13 @@ CREATE TABLE STUDENTS
 )
 ;
 SELECT * FROM STUDENTS;
-INSERT INTO STUDENTS VALUES ('S001','È«±æµ¿',22,'M','±¹¾î±¹¹®ÇÐ°ú');
-INSERT INTO STUDENTS VALUES ('S002','Àü¿ìÄ¡',23,'M','¼öÇÐ°ú');
-INSERT INTO STUDENTS VALUES ('S003','¹é¼³°øÁÖ',22,'F','ºÒ¹®°ú');
-INSERT INTO STUDENTS VALUES ('S004','½Åµ¥·¼¶ó',28,'F','ºÒ¹®°ú');
+INSERT INTO STUDENTS VALUES ('S001','í™ê¸¸ë™',22,'M','êµ­ì–´êµ­ë¬¸í•™ê³¼');
+INSERT INTO STUDENTS VALUES ('S002','ì „ìš°ì¹˜',23,'M','ìˆ˜í•™ê³¼');
+INSERT INTO STUDENTS VALUES ('S003','ë°±ì„¤ê³µì£¼',22,'F','ë¶ˆë¬¸ê³¼');
+INSERT INTO STUDENTS VALUES ('S004','ì‹ ë°ë ë¼',28,'F','ë¶ˆë¬¸ê³¼');
 COMMIT;
 
---2.°ú¸ñ 
+--2.ê³¼ëª© 
 CREATE TABLE SUBJECTS
 (
     SU_ID CHAR(4) NOT NULL PRIMARY KEY,
@@ -66,14 +71,12 @@ CREATE TABLE SUBJECTS
 );
 
 SELECT * FROM SUBJECTS;
-INSERT INTO SUBJECTS VALUES('SU01','±¹¾î');
-INSERT INTO SUBJECTS VALUES('SU02','¼öÇÐ');
-INSERT INTO SUBJECTS VALUES('SU03','¿µ¾î');
-INSERT INTO SUBJECTS VALUES('SU04','°úÇÐ');
+INSERT INTO SUBJECTS VALUES('SU01','êµ­ì–´');
+INSERT INTO SUBJECTS VALUES('SU02','ìˆ˜í•™');
+INSERT INTO SUBJECTS VALUES('SU03','ì˜ì–´');
+INSERT INTO SUBJECTS VALUES('SU04','ê³¼í•™');
 
---3.½ÃÇè
-SELECT * FROM EXMAS;
-
+--3.ì‹œí—˜
 CREATE TABLE EXMAS
 (
     E_ID CHAR(4) NOT NULL PRIMARY KEY,
@@ -81,16 +84,18 @@ CREATE TABLE EXMAS
     SU_ID CHAR(4) NOT NULL
 );
 
-INSERT INTO EXMAS VALUES ('E001','±¹¾îÁß°£°í»ç','SU01');
-INSERT INTO EXMAS VALUES ('E002','±¹¾î±â¸»°í»ç','SU01');
-INSERT INTO EXMAS VALUES ('E003','¼öÇÐÁß°£°í»ç','SU02');
-INSERT INTO EXMAS VALUES ('E004','¼öÇÐ±â¸»°í»ç','SU02');
-INSERT INTO EXMAS VALUES ('E005','¿µ¾îÁß°£°í»ç','SU03');
-INSERT INTO EXMAS VALUES ('E006','¿µ¾î±â¸»°í»ç','SU03');
-INSERT INTO EXMAS VALUES ('E007','°úÇÐÁß°£°í»ç','SU04');
-INSERT INTO EXMAS VALUES ('E008','°úÇÐ±â¸»°í»ç','SU04');
+SELECT * FROM EXMAS;
 
---5. ÇÐ»ýÀÌ ½ÃÇèÀ» Ä£´Ù.   
+INSERT INTO EXMAS VALUES ('E001','êµ­ì–´ì¤‘ê°„ê³ ì‚¬','SU01');
+INSERT INTO EXMAS VALUES ('E002','êµ­ì–´ê¸°ë§ê³ ì‚¬','SU01');
+INSERT INTO EXMAS VALUES ('E003','ìˆ˜í•™ì¤‘ê°„ê³ ì‚¬','SU02');
+INSERT INTO EXMAS VALUES ('E004','ìˆ˜í•™ê¸°ë§ê³ ì‚¬','SU02');
+INSERT INTO EXMAS VALUES ('E005','ì˜ì–´ì¤‘ê°„ê³ ì‚¬','SU03');
+INSERT INTO EXMAS VALUES ('E006','ì˜ì–´ê¸°ë§ê³ ì‚¬','SU03');
+INSERT INTO EXMAS VALUES ('E007','ê³¼í•™ì¤‘ê°„ê³ ì‚¬','SU04');
+INSERT INTO EXMAS VALUES ('E008','ê³¼í•™ê¸°ë§ê³ ì‚¬','SU04');
+
+--5. í•™ìƒì´ ì‹œí—˜ì„ ì¹œë‹¤.   
 CREATE TABLE RESULTS
 (
     S_ID CHAR(4) NOT NULL,
@@ -133,55 +138,50 @@ SELECT * FROM SUBJECTS;
 SELECT * FROM EXMAS;
 SELECT * FROM RESULTS;
 
---ÇÐ»ýº° ÃÑÁ¡
+--í•™ìƒë³„ ì´ì 
 SELECT S_ID, SUM(SCORE) FROM RESULTS
 GROUP BY S_ID;
---ÇÐ»ý(ÀÌ¸§)º° ÃÑÁ¡ 
+--í•™ìƒ(ì´ë¦„)ë³„ ì´ì  
 SELECT t1.s_name,r1.S_ID, SUM(SCORE) FROM RESULTS r1, students t1
 GROUP BY t1.s_name,r1.S_ID
 order by s_id;
 
---½ÃÇèÄ£ ÇÐ»ýÀÇ °¢ °ú¸ñº° Á¡¼ö // where t1.s_id ¿Í t2.s_id¿Í ´ëÀÀÇÏ´Â °ªÀ» Ãâ·ÂÇÏ´Âµ¥ ´ëÀÀÇÏ´Â °ªÀÌ ¾øÀ¸¸é noÃâ·Â
+--ì‹œí—˜ì¹œ í•™ìƒì˜ ê° ê³¼ëª©ë³„ ì ìˆ˜ // where t1.s_id ì™€ t2.s_idì™€ ëŒ€ì‘í•˜ëŠ” ê°’ì„ ì¶œë ¥í•˜ëŠ”ë° ëŒ€ì‘í•˜ëŠ” ê°’ì´ ì—†ìœ¼ë©´ noì¶œë ¥
 SELECT T1.S_ID, T1.S_NAME, T2.SCORE FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID
 ;
---½ÃÇèÄ£ ÇÐ»ýÀÇ °¢ °ú¸ñº° Á¡¼ö //left join //  where t1.s_id ¿Í t2.s_id¿Í ´ëÀÀÇÏ´Â °ªÀ» ¸ðµÎ Ãâ·Â
+--ì‹œí—˜ì¹œ í•™ìƒì˜ ê° ê³¼ëª©ë³„ ì ìˆ˜ //left join //  where t1.s_id ì™€ t2.s_idì™€ ëŒ€ì‘í•˜ëŠ” ê°’ì„ ëª¨ë‘ ì¶œë ¥
 SELECT T1.S_ID, T1.S_NAME, T2.SCORE FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID(+)
 ;
---½ÃÇèÄ£ ÇÐ»ýÀÇ ÃÑÁ¡, 
+--ì‹œí—˜ì¹œ í•™ìƒì˜ ì´ì , 
 SELECT T1.S_NAME, SUM(T2.SCORE) FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID(+)
 GROUP BY T1.S_NAME
 ;
 
---ÇÐ»ýº° ÃÑÁ¡À» ±¸ÇØ¶ó from Àº ÀÌ¹Ì ¸Þ¸ð¸®»ó¿¡ À§Ä¡ÇÏ±â ¶§¹®¿¡ ÀÌ ¹®¹ýÀÌ °¡´ÉÇÔ 
+--í•™ìƒë³„ ì´ì ì„ êµ¬í•´ë¼ from ì€ ì´ë¯¸ ë©”ëª¨ë¦¬ìƒì— ìœ„ì¹˜í•˜ê¸° ë•Œë¬¸ì— ì´ ë¬¸ë²•ì´ ê°€ëŠ¥í•¨ 
 SELECT  (SELECT S_NAME FROM STUDENTS WHERE S_ID = T1.S_ID) AS S_NAME
 , SUM(SCORE) FROM RESULTS T1
 GROUP BY S_ID
 ;
 
---N:M¹æ½Ä¿¡¼­´Â ÀÌ·¸°Ô¹Û¿¡ ¾ÈµÈ´Ù.
+--N:Më°©ì‹ì—ì„œëŠ” ì´ë ‡ê²Œë°–ì— ì•ˆëœë‹¤.(
 SELECT (SELECT S_NAME FROM STUDENTS WHERE S_ID = T1.S_ID)
 , T1.SCORE FROM RESULTS T1
 WHERE T1.SCORE>80;
 
 
---µ¿ÀÏÀÎÀÌ ³ª¿Ã°æ¿ì´Â¾îÂ¿²¨³Ä ...
+--ë™ì¼ì¸ì´ ë‚˜ì˜¬ê²½ìš°ëŠ”ì–´ì©”êº¼ëƒ ...
 
---Æò±Õ 
+--í‰ê·  
 SELECT T1.S_ID,T1.S_NAME, SUM(T2.SCORE),AVG (T2.SCORE) 
 FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID
 GROUP BY T1.S_ID,T1.S_NAME
 ;
-    SELECT T1.S_ID,T1.S_NAME, SUM(T2.SCORE) ,AVG (T2.SCORE)
-    FROM STUDENTS T1, RESULTS T2
-    WHERE T1.S_ID = T2.S_ID
-    GROUP BY T1.S_ID,T1.S_NAME
-    ORDER BY AVG(T2.SCORE);
     
---·©Å© ¼ø¼­ ÇÏ·Á¸é    //¿©±â¼­ºÎÅÍ ¤¡¤¡¤¡¤¡
+--ëž­í¬ ìˆœì„œ í•˜ë ¤ë©´    //ì—¬ê¸°ì„œë¶€í„° ã„±ã„±ã„±ã„±
 SELECT * from
 (
     SELECT T1.S_ID,T1.S_NAME, SUM(T2.SCORE) AS TOTAL 
@@ -193,14 +193,15 @@ SELECT * from
 ORDER BY A.TOTAL
 ;
 
--- S001 ´ë½Å S_NAME À» ³Ö´Â ÀÎ¶óÀÎ Äõ¸®
+-- S001 ëŒ€ì‹  S_NAME ì„ ë„£ëŠ” ì¸ë¼ì¸ ì¿¼ë¦¬
 SELECT T1.S_ID, T1.SCORE FROM RESULTS T1
 WHERE SCORE> 80;
 
---N:M¹æ½Ä¿¡¼­´Â ÀÌ·¸°Ô¹Û¿¡ ¾ÈµÈ´Ù.
 
+--1:N ë°©ì‹ 
 SELECT * FROM STUDENTS S1, RESULTS T1 WHERE S1.S_ID = T1.S_ID;
 
+--N:Më°©ì‹ì—ì„œëŠ” ì´ë ‡ê²Œë°–ì— ì•ˆëœë‹¤.
 SELECT (SELECT S_NAME FROM STUDENTS WHERE S_ID = T1.S_ID)
 , T1.SCORE FROM RESULTS T1
 WHERE T1.SCORE>80;
@@ -209,7 +210,7 @@ SELECT T1.* FROM STUDENTS S1,RESULTS T1
 WHERE S1.S_ID = T1.S_ID AND T1.SCORE>80;
 
 
---ÀÎ¶óÀÎ ÄÚµù ¹æ½ÄÀÌ°í ¾Æ·¡¿¡¼­ FROM ´ÙÀ½ºÎÅÍ T1ÀÌ¶ó´Â ¸Þ¸ð¸®·Î ÀúÀåµÇ°í T1.* ·Î Ãâ·Â 
+--ì¸ë¼ì¸ ì½”ë”© ë°©ì‹ì´ê³  ì•„ëž˜ì—ì„œ FROM ë‹¤ìŒë¶€í„° T1ì´ë¼ëŠ” ë©”ëª¨ë¦¬ë¡œ ì €ìž¥ë˜ê³  T1.* ë¡œ ì¶œë ¥ 
 SELECT T1.* FROM
 (
 SELECT S_ID , SUM(SCORE) 
@@ -227,10 +228,10 @@ GROUP BY S_ID
 WHERE T1.S_ID = T2.S_ID
 ;
 
---TO_CHAR() , TO_CHAR(³¯Â¥,Æ÷¸Ë) , TO_CHAR(³¯Â¥,'DAY');
+--TO_CHAR() , TO_CHAR(ë‚ ì§œ,í¬ë§·) , TO_CHAR(ë‚ ì§œ,'DAY');
 SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD') FROM DUAL;
 
-SELECT TO_CHAR(1,'0000')FROM DUAL; --°ø¹éÀÌÀÖ³×.
+SELECT TO_CHAR(1,'0000')FROM DUAL; --ê³µë°±ì´ìžˆë„¤.
 
 SELECT 'P' || TO_CHAR(1,'0000')FROM DUAL;
 
@@ -238,30 +239,30 @@ SELECT 'P' || TRIM(TO_CHAR(1,'0000')) FROM DUAL;
 
 SELECT TO_DATE('20200620','YYYYMMDD') FROM DUAL;
 
---½ÃÇèÀ» Ä¡Áö¾Ê´Â ÇÐ»ý LEFTJOINÀ» ÇØ¶ó
-Q1.ÇÐ»ýÀÌ ½ÃÇèÀ» ÃÆ´Âµ¥ ÇÐ»ýÀÌ ½ÃÇèÄ¡Áö ¾Ê´Â ÇÐ»ý°ú, °ú¸ñ¸íÀ» Ãâ·ÂÇØ¶ó
---½ÃÇèÀ» ÇÑ¹øÀÌ¶óµµ Ä£ »ç¶÷Àº RESULTS ¿¡ µ¥ÀÌÅÍ°¡ ÀÖ´Ù.
-Q2. ½ÃÇèÀ» ÇÑ¹øÀÌ¶óµµ Ä¡Áö ¾Ê´Â ÇÐ»ýÀ» ±¸ÇØ¶ó
+--ì‹œí—˜ì„ ì¹˜ì§€ì•ŠëŠ” í•™ìƒ LEFTJOINì„ í•´ë¼
+Q1.í•™ìƒì´ ì‹œí—˜ì„ ì³¤ëŠ”ë° í•™ìƒì´ ì‹œí—˜ì¹˜ì§€ ì•ŠëŠ” í•™ìƒê³¼, ê³¼ëª©ëª…ì„ ì¶œë ¥í•´ë¼
+--ì‹œí—˜ì„ í•œë²ˆì´ë¼ë„ ì¹œ ì‚¬ëžŒì€ RESULTS ì— ë°ì´í„°ê°€ ìžˆë‹¤.
+Q2. ì‹œí—˜ì„ í•œë²ˆì´ë¼ë„ ì¹˜ì§€ ì•ŠëŠ” í•™ìƒì„ êµ¬í•´ë¼
 --LEFT JOIN 
 SELECT * FROM STUDENTS;
---ÀÌ°Ô LEFT JOINÀÌ´Ù...¿À¸¥ÂÊ¿¡ (+)ÀÖ´Â°Ô..
+--ì´ê²Œ LEFT JOINì´ë‹¤...ì˜¤ë¥¸ìª½ì— (+)ìžˆëŠ”ê²Œ..
 SELECT * 
 FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID(+); 
 
---NULLÀ» ÅëÇØ¼­ ÇÑ¹øµµ ¾ÈÄ£»ç¶÷À» Ã£À»¼ö  ÀÖ´Ù.
+--NULLì„ í†µí•´ì„œ í•œë²ˆë„ ì•ˆì¹œì‚¬ëžŒì„ ì°¾ì„ìˆ˜  ìžˆë‹¤.
 SELECT * 
 FROM STUDENTS T1, RESULTS T2
 WHERE T1.S_ID = T2.S_ID(+)
 AND T2.S_ID IS NULL; 
 
-Q1.ÇÐ»ýÀÌ ½ÃÇèÀ» ÃÆ´Âµ¥ ÇÐ»ýÀÌ ½ÃÇèÄ¡Áö ¾Ê´Â ÇÐ»ý°ú, °ú¸ñ¸íÀ» Ãâ·ÂÇØ¶ó
-1.¸ÕÀú ÇÐ»ý 4¸í ½ÃÇèÁ¾·á 8 = 32°³ÀÇ µ¥ÀÌÅÍ°¡ ÀÖ´Âµ¥ INLINEÅ×ÀÌºí·Î ¸ÕÀú ¸¸µé¾î¾ß ÇÑ´Ù. CROSS JOIN = 1¹øÇÐ»ý 8°³ 2¹øÇÐ»ý 8°³ 3¹øÇÐ»ý 8°³ 4¹øÇÐ»ý 8 °³ ÂÓ 
+Q1.í•™ìƒì´ ì‹œí—˜ì„ ì³¤ëŠ”ë° í•™ìƒì´ ì‹œí—˜ì¹˜ì§€ ì•ŠëŠ” í•™ìƒê³¼, ê³¼ëª©ëª…ì„ ì¶œë ¥í•´ë¼
+1.ë¨¼ì € í•™ìƒ 4ëª… ì‹œí—˜ì¢…ë£Œ 8 = 32ê°œì˜ ë°ì´í„°ê°€ ìžˆëŠ”ë° INLINEí…Œì´ë¸”ë¡œ ë¨¼ì € ë§Œë“¤ì–´ì•¼ í•œë‹¤. CROSS JOIN = 1ë²ˆí•™ìƒ 8ê°œ 2ë²ˆí•™ìƒ 8ê°œ 3ë²ˆí•™ìƒ 8ê°œ 4ë²ˆí•™ìƒ 8 ê°œ ì«™ 
 SELECT * FROM STUDENTS T1, EXMAS T2;
 
-2.32-22 = 10 °³¸¦ ±¸ÇØ¾ßÇÑ´Ù.
+2.32-22 = 10 ê°œë¥¼ êµ¬í•´ì•¼í•œë‹¤.
 
---ÀÌ³»¿ëµéÀÌ ¸Þ¸ð¸®¿¡ ±¸¼ºµÇ¾îÀÖ´Ù.
+--ì´ë‚´ìš©ë“¤ì´ ë©”ëª¨ë¦¬ì— êµ¬ì„±ë˜ì–´ìžˆë‹¤.
 SELECT * FROM
 (SELECT T1.S_ID,T2.E_ID FROM STUDENTS T1, EXMAS T2)
 T3, RESULTS T4
@@ -283,7 +284,7 @@ AND T4.E_ID IS NULL
 
 
 
-INNER JOIN ¾çÂÊ Å×ÀÌºí¿¡ ÇÊµå°ªÀÌ Á¸ÀçÇØ¾ß ÇÑ´Ù.
+INNER JOIN ì–‘ìª½ í…Œì´ë¸”ì— í•„ë“œê°’ì´ ì¡´ìž¬í•´ì•¼ í•œë‹¤.
 
 
 
